@@ -1,0 +1,2559 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPTX 플랫폼</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=Pretendard:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ── 변수 ──────────────────────────────────────────────────────────────────── */
+    :root {
+      --bg: #0b0d11;
+      --bg-panel: #12151c;
+      --bg-card: #181c26;
+      --bg-input: #1e2330;
+      --border: #2a2f3d;
+      --border-hi: #3d4561;
+      --accent: #4f7cff;
+      --accent-dim: #2a4399;
+      --accent-glow: rgba(79, 124, 255, 0.18);
+      --amber: #f5a623;
+      --amber-dim: #7a5212;
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --text-1: #eef0f6;
+      --text-2: #8b90a8;
+      --text-3: #50566b;
+      --font-head: 'Syne', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-body: 'Pretendard', 'Noto Sans KR', sans-serif;
+      --radius: 10px;
+      --radius-lg: 16px;
+      --trans: 200ms cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* ── 리셋 & 기반 ──────────────────────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 배경 격자 텍스처 ──────────────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: .25;
+      pointer-events: none;
+    }
+
+    /* ── 레이아웃 ────────────────────────────────────────────────────────────── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 32px 80px;
+    }
+
+    /* ── 헤더 ────────────────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 40px 0 36px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+
+    .logo-mark {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #7b5fff);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .header-text h1 {
+      font-family: var(--font-head);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+      color: var(--text-1);
+      line-height: 1.1;
+    }
+
+    .header-text p {
+      color: var(--text-2);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .status-pill {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-3);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 99px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-3);
+      transition: background var(--trans), box-shadow var(--trans);
+    }
+
+    .status-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .status-dot.err {
+      background: var(--red);
+    }
+
+    /* ── 탭 네비게이션 ───────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 32px;
+    }
+
+    .tab-btn {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-2);
+      transition: all var(--trans);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-1);
+      border-color: var(--border);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      border-color: var(--border-hi);
+      color: var(--text-1);
+    }
+
+    .tab-btn .tab-icon {
+      font-size: 16px;
+    }
+
+    .tab-btn .tab-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 1px 7px;
+      border-radius: 99px;
+    }
+
+    .tab-btn.active .tab-badge {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── 패널 ────────────────────────────────────────────────────────────────── */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadeUp .3s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── 카드 ────────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── 폼 요소 ─────────────────────────────────────────────────────────────── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 7px;
+      letter-spacing: .3px;
+    }
+
+    label span {
+      color: var(--text-3);
+      font-weight: 400;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-1);
+      transition: border-color var(--trans), box-shadow var(--trans);
+      outline: none;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-3);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input[type="text"].valid {
+      border-color: var(--green);
+    }
+
+    input[type="text"].invalid {
+      border-color: var(--red);
+    }
+
+    /* ── 버튼 ────────────────────────────────────────────────────────────────── */
+    .btn {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: all var(--trans);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: var(--bg-input);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-1);
+      border-color: var(--border-hi);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(79, 124, 255, .3);
+    }
+
+    .btn-primary:hover {
+      background: #6690ff;
+      box-shadow: 0 6px 24px rgba(79, 124, 255, .4);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: var(--accent-dim);
+      color: var(--text-3);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-amber {
+      background: var(--amber);
+      color: #0b0d11;
+      box-shadow: 0 4px 16px rgba(245, 166, 35, .25);
+    }
+
+    .btn-amber:hover {
+      background: #f7b84a;
+      box-shadow: 0 6px 24px rgba(245, 166, 35, .35);
+      transform: translateY(-1px);
+    }
+
+    .btn-amber:disabled {
+      background: var(--amber-dim);
+      color: var(--text-3);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      align-items: center;
+    }
+
+    .form-actions .hint {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-left: 4px;
+    }
+
+    /* ── 디렉토리 확인 뱃지 ──────────────────────────────────────────────────── */
+    .dir-hint {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 5px;
+      min-height: 16px;
+      transition: color var(--trans);
+    }
+
+    .dir-hint.ok {
+      color: var(--green);
+    }
+
+    .dir-hint.err {
+      color: var(--red);
+    }
+
+    /* ── 로그 콘솔 ───────────────────────────────────────────────────────────── */
+    .console-wrap {
+      margin-top: 20px;
+      background: #090b0f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .console-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .console-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .console-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .console-dots span:nth-child(1) {
+      background: #ff5f57;
+    }
+
+    .console-dots span:nth-child(2) {
+      background: #febc2e;
+    }
+
+    .console-dots span:nth-child(3) {
+      background: #28c840;
+    }
+
+    .console-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .console-status {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .console-body {
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.8;
+      color: #7a8499;
+      height: 260px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .console-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .console-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .console-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .log-success {
+      color: #2ecc71;
+    }
+
+    .log-warn {
+      color: var(--amber);
+    }
+
+    .log-error {
+      color: var(--red);
+    }
+
+    .log-info {
+      color: var(--accent);
+    }
+
+    .log-dim {
+      color: var(--text-3);
+    }
+
+    /* ── 결과 요약 카드 ──────────────────────────────────────────────────────── */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .result-stat {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+
+    .result-stat .num {
+      font-family: var(--font-head);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-1);
+      line-height: 1;
+    }
+
+    .result-stat .lbl {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 5px;
+      letter-spacing: .4px;
+    }
+
+    .result-stat.accent .num {
+      color: var(--accent);
+    }
+
+    .result-stat.amber .num {
+      color: var(--amber);
+    }
+
+    .result-stat.green .num {
+      color: var(--green);
+    }
+
+    /* ── 진행 바 ─────────────────────────────────────────────────────────────── */
+    .progress-bar-wrap {
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .progress-bar-wrap.show {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #7b5fff);
+      border-radius: 99px;
+      transition: width .4s ease;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        filter: brightness(1);
+      }
+
+      50% {
+        filter: brightness(1.3);
+      }
+
+      100% {
+        filter: brightness(1);
+      }
+    }
+
+    /* ── 구분선 ──────────────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ── 반응형 ──────────────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .tabs {
+        flex-direction: column;
+      }
+
+      .input-row {
+        flex-direction: column;
+      }
+
+      .form-actions {
+        flex-wrap: wrap;
+      }
+
+      header {
+        flex-wrap: wrap;
+      }
+
+      .status-pill {
+        margin-left: 0;
+      }
+    }
+
+    /* ── 결과 테이블 ──────────────────────────────────────────────────────────── */
+    .table-section {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .table-section.show {
+      display: block;
+    }
+
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .table-title {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: .5px;
+    }
+
+    .table-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+
+    .table-filter {
+      margin-left: auto;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-1);
+      outline: none;
+      width: 220px;
+    }
+
+    .table-filter:focus {
+      border-color: var(--accent);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    thead th {
+      background: var(--bg-panel);
+      padding: 10px 14px;
+      text-align: left;
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      position: sticky;
+      top: 0;
+    }
+
+    thead th:hover {
+      color: var(--text-1);
+    }
+
+    thead th.sort-asc::after {
+      content: ' ↑';
+      color: var(--accent);
+    }
+
+    thead th.sort-desc::after {
+      content: ' ↓';
+      color: var(--accent);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-panel);
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      color: var(--text-1);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    tbody td.num-cell {
+      font-family: var(--font-mono);
+      color: var(--text-3);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    tbody td.badge-cell {
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .badge-ok {
+      background: rgba(46, 204, 113, .15);
+      color: var(--green);
+    }
+
+    .badge-err {
+      background: rgba(231, 76, 60, .15);
+      color: var(--red);
+    }
+
+    .badge-body {
+      background: rgba(79, 124, 255, .15);
+      color: var(--accent);
+    }
+
+    .badge-table {
+      background: rgba(245, 166, 35, .15);
+      color: var(--amber);
+    }
+
+    .badge-note {
+      background: rgba(155, 89, 182, .15);
+      color: #b39ddb;
+    }
+
+    .badge-xml {
+      background: rgba(127, 127, 127, .15);
+      color: var(--text-2);
+    }
+
+    .context-text {
+      color: var(--text-2);
+      font-size: 11px;
+      word-break: break-word;
+      max-width: 360px;
+      cursor: pointer;
+    }
+
+    .context-text .ctx-body {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: all var(--trans);
+    }
+
+    .context-text.expanded .ctx-body {
+      display: block;
+      -webkit-line-clamp: unset;
+    }
+
+    .ctx-toggle {
+      font-size: 10px;
+      color: var(--accent);
+      margin-top: 3px;
+      display: inline-block;
+    }
+
+    .highlight {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+
+    /* ── 폴더 브라우저 모달 ───────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, .65);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius-lg);
+      width: 560px;
+      max-width: 95vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, .6);
+      animation: fadeUp .2s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 {
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-1);
+      flex: 1;
+    }
+
+    .modal-path {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-3);
+      padding: 8px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .modal-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .modal-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .modal-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: background var(--trans);
+      color: var(--text-1);
+      font-size: 13px;
+    }
+
+    .modal-item:hover {
+      background: var(--bg-input);
+    }
+
+    .modal-item.up {
+      color: var(--text-3);
+      font-style: italic;
+    }
+
+    .modal-item .icon {
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .modal-item.pptx-file {
+      color: var(--text-2);
+      cursor: default;
+    }
+
+    .modal-item.pptx-file:hover {
+      background: transparent;
+    }
+
+    .modal-item.pptx-file .icon {
+      opacity: .7;
+    }
+
+    .modal-pptx-divider {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: .06em;
+      padding: 6px 14px 4px;
+      text-transform: uppercase;
+      border-top: 1px solid var(--border);
+      margin-top: 2px;
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal-selected {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-empty {
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 12px;
+    }
+
+    /* ── 분석 탭: 파일 목록 ───────────────────────────────────────────────────── */
+    .file-list-section {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .file-list-section.show {
+      display: block;
+    }
+
+    .file-list-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .file-list-header label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-2);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .file-list-header input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .file-list-count {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 2px 10px;
+      border-radius: 99px;
+    }
+
+    .file-list-body {
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .file-list-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .file-list-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+      cursor: pointer;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-item:hover {
+      background: var(--bg-input);
+    }
+
+    .file-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .file-item-name {
+      font-size: 13px;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+    }
+
+    .file-item-rel {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-left: auto;
+      max-width: 260px;
+      text-align: right;
+    }
+
+    /* ── 분석 탭: 결과 서브탭 ────────────────────────────────────────────────── */
+    .an-subtabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .an-stab {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 18px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-3);
+      border-bottom: 2px solid transparent;
+      transition: all var(--trans);
+    }
+
+    .an-stab:hover {
+      color: var(--text-1);
+    }
+
+    .an-stab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .an-panel {
+      display: none;
+    }
+
+    .an-panel.active {
+      display: block;
+      animation: fadeUp .25s ease;
+    }
+
+    /* ── 분석 탭: 차트 컨테이너 ─────────────────────────────────────────────── */
+    .chart-box {
+      position: relative;
+      width: 100%;
+    }
+
+    .chart-box.h360 {
+      height: 360px;
+    }
+
+    .chart-box.h300 {
+      height: 300px;
+    }
+
+    .chart-box.h480 {
+      height: 480px;
+    }
+
+    .chart-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 720px) {
+      .chart-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── 분석 탭: 태그 & 네트워크 ───────────────────────────────────────────── */
+    .an-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      margin: 2px;
+      white-space: nowrap;
+    }
+
+    .an-tag-noun {
+      background: rgba(79, 124, 255, .15);
+      color: #c0ccff;
+      text-shadow: 0 0 8px rgba(79, 124, 255, .8);
+    }
+
+    .an-tag-tfidf {
+      background: rgba(245, 166, 35, .15);
+      color: var(--amber);
+    }
+
+    .an-empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    #net-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- ── 헤더 ─────────────────────────────────────────────────────────────── -->
+    <header>
+      <div class="logo-mark">▶</div>
+      <div class="header-text">
+        <h1>PPTX 플랫폼</h1>
+        <p>PowerPoint 파일 분석 도구</p>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">서버 확인 중…</span>
+      </div>
+    </header>
+
+    <!-- ── 탭 ───────────────────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="scan">
+        <span class="tab-icon">📋</span>
+        파일 목록 & 슬라이드 수
+        <span class="tab-badge">SCANNER</span>
+      </button>
+      <button class="tab-btn" data-tab="search">
+        <span class="tab-icon">🔍</span>
+        키워드 검색
+        <span class="tab-badge">SEARCH</span>
+      </button>
+      <button class="tab-btn" data-tab="analyze">
+        <span class="tab-icon">📊</span>
+        텍스트 분석
+        <span class="tab-badge">ANALYZE</span>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+       패널 1 — SCANNER
+  ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="panel active" id="panel-scan">
+
+      <div class="card">
+        <div class="card-title">입력 설정</div>
+
+        <div class="form-group">
+          <label>탐색 디렉토리 경로 <span>— 하위 폴더 포함 전체 탐색</span></label>
+          <div class="input-row">
+            <input type="text" id="scan-dir" placeholder="예) C:\Users\nalang\OneDrive\문서\강의자료">
+            <button class="btn btn-ghost" onclick="checkDir('scan-dir','scan-dir-hint')">확인</button>
+            <button class="btn btn-ghost" onclick="openModal('scan-dir')">📁 탐색</button>
+          </div>
+          <div class="dir-hint" id="scan-dir-hint"></div>
+        </div>
+
+        <div class="form-group">
+          <label>출력 파일명 <span>— 비워두면 자동 생성 (pptx_목록.xlsx)</span></label>
+          <input type="text" id="scan-output" placeholder="예) 강의자료_목록.xlsx">
+        </div>
+
+        <div class="progress-bar-wrap" id="scan-progress">
+          <div class="progress-bar" id="scan-bar"></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="scan-btn" onclick="runScan()">
+            ▶ 스캔 시작
+          </button>
+          <button class="btn btn-ghost" onclick="clearConsole('scan')">초기화</button>
+          <span class="hint" id="scan-hint"></span>
+        </div>
+      </div>
+
+      <!-- 결과 요약 -->
+      <div id="scan-stats" style="display:none">
+        <div class="result-grid">
+          <div class="result-stat accent">
+            <div class="num" id="scan-stat-files">0</div>
+            <div class="lbl">탐색 파일 수</div>
+          </div>
+          <div class="result-stat green">
+            <div class="num" id="scan-stat-ok">0</div>
+            <div class="lbl">성공</div>
+          </div>
+          <div class="result-stat amber">
+            <div class="num" id="scan-stat-slides">0</div>
+            <div class="lbl">총 슬라이드 수</div>
+          </div>
+          <div class="result-stat">
+            <div class="num" id="scan-stat-err">0</div>
+            <div class="lbl">오류 파일</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 콘솔 -->
+      <div class="console-wrap">
+        <div class="console-header">
+          <div class="console-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="console-label">scanner — 실행 로그</span>
+          <span class="console-status" id="scan-console-status">대기 중</span>
+        </div>
+        <div class="console-body" id="scan-console">
+          <span class="log-dim">— 스캔을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>
+        </div>
+      </div>
+
+      <!-- 결과 테이블 -->
+      <div class="table-section" id="scan-table-section">
+        <div class="table-toolbar">
+          <span class="table-title">📋 스캔 결과</span>
+          <span class="table-count" id="scan-table-count">0건</span>
+          <input class="table-filter" id="scan-filter" placeholder="필터 (파일명, 제목…)" oninput="filterTable('scan')">
+        </div>
+        <div class="table-wrap">
+          <table id="scan-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('scan',0)" style="width:60px">번호</th>
+                <th onclick="sortTable('scan',1)" style="width:22%">파일명</th>
+                <th onclick="sortTable('scan',2)" style="width:auto">제목</th>
+                <th onclick="sortTable('scan',3)" style="width:100px">슬라이드 수</th>
+                <th onclick="sortTable('scan',4)" style="width:80px">상태</th>
+              </tr>
+            </thead>
+            <tbody id="scan-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panel-scan -->
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+       패널 2 — SEARCH
+  ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-search">
+
+      <div class="card">
+        <div class="card-title">검색 설정</div>
+
+        <div class="form-group">
+          <label>탐색 디렉토리 경로 <span>— 하위 폴더 포함 전체 탐색</span></label>
+          <div class="input-row">
+            <input type="text" id="search-dir" placeholder="예) C:\Users\nalang\OneDrive\문서\강의자료">
+            <button class="btn btn-ghost" onclick="checkDir('search-dir','search-dir-hint')">확인</button>
+            <button class="btn btn-ghost" onclick="openModal('search-dir')">📁 탐색</button>
+          </div>
+          <div class="dir-hint" id="search-dir-hint"></div>
+        </div>
+
+        <div class="form-group">
+          <label>검색어 <span>— 쉼표로 구분하여 복수 입력 가능, 대소문자 구분 없음</span></label>
+          <input type="text" id="search-keyword" placeholder="예) 파인튜닝, LLM, 에이전트"
+            onkeydown="if(event.key==='Enter')runSearch()">
+        </div>
+
+        <div class="form-group">
+          <label>출력 파일명 <span>— 비워두면 자동 생성 (검색_결과.xlsx)</span></label>
+          <input type="text" id="search-output" placeholder="예) 검색결과.xlsx">
+        </div>
+
+        <div class="progress-bar-wrap" id="search-progress">
+          <div class="progress-bar" id="search-bar"></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-amber" id="search-btn" onclick="runSearch()">
+            🔍 검색 시작
+          </button>
+          <button class="btn btn-ghost" onclick="clearConsole('search')">초기화</button>
+          <span class="hint" id="search-hint"></span>
+        </div>
+      </div>
+
+      <!-- 결과 요약 -->
+      <div id="search-stats" style="display:none">
+        <div class="result-grid">
+          <div class="result-stat accent">
+            <div class="num" id="search-stat-files">0</div>
+            <div class="lbl">탐색 파일 수</div>
+          </div>
+          <div class="result-stat amber">
+            <div class="num" id="search-stat-hits">0</div>
+            <div class="lbl">발견 건수</div>
+          </div>
+          <div class="result-stat green">
+            <div class="num" id="search-stat-hitfiles">0</div>
+            <div class="lbl">히트 파일 수</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 콘솔 -->
+      <div class="console-wrap">
+        <div class="console-header">
+          <div class="console-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="console-label">search — 실행 로그</span>
+          <span class="console-console-status console-status" id="search-console-status">대기 중</span>
+        </div>
+        <div class="console-body" id="search-console">
+          <span class="log-dim">— 검색을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>
+        </div>
+      </div>
+
+      <!-- 결과 테이블 -->
+      <div class="table-section" id="search-table-section">
+        <div class="table-toolbar">
+          <span class="table-title">🔍 검색 결과</span>
+          <span class="table-count" id="search-table-count">0건</span>
+          <input class="table-filter" id="search-filter" placeholder="필터 (파일명, 제목, 문맥…)"
+            oninput="filterTable('search')">
+        </div>
+        <div class="table-wrap">
+          <table id="search-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('search',0)" style="width:55px">번호</th>
+                <th onclick="sortTable('search',1)" style="width:20%">파일명</th>
+                <th onclick="sortTable('search',2)" style="width:70px">슬라이드</th>
+                <th onclick="sortTable('search',3)" style="width:18%">슬라이드 제목</th>
+                <th onclick="sortTable('search',4)" style="width:70px">출처</th>
+                <th onclick="sortTable('search',5)" style="width:130px">매칭 키워드</th>
+                <th onclick="sortTable('search',6)" style="width:55px">횟수</th>
+                <th onclick="sortTable('search',7)" style="width:auto">문맥 미리보기</th>
+              </tr>
+            </thead>
+            <tbody id="search-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panel-search -->
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+       패널 3 — ANALYZE (텍스트 분석)
+  ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-analyze">
+
+      <div class="card">
+        <div class="card-title">분석 설정</div>
+
+        <div class="form-group">
+          <label>분석 경로 <span>— 하위 폴더 포함, 폴더 전체 또는 파일 선택 가능</span></label>
+          <div class="input-row">
+            <input type="text" id="analyze-dir" placeholder="예) C:\Users\nalang\OneDrive\문서\강의자료">
+            <button class="btn btn-ghost" onclick="checkDir('analyze-dir','analyze-dir-hint')">확인</button>
+            <button class="btn btn-ghost" onclick="openModal('analyze-dir')">📁 탐색</button>
+          </div>
+          <div class="dir-hint" id="analyze-dir-hint"></div>
+        </div>
+
+        <!-- 파일 목록 -->
+        <div class="file-list-section" id="analyze-file-section">
+          <div class="file-list-header">
+            <label>
+              <input type="checkbox" id="check-all" onchange="toggleAllFiles(this.checked)">
+              전체 선택
+            </label>
+            <span class="file-list-count" id="analyze-file-count">0개 파일</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-left:8px;"
+              id="analyze-sel-count"></span>
+          </div>
+          <div class="file-list-body" id="analyze-file-list"></div>
+        </div>
+
+        <div class="progress-bar-wrap" id="analyze-progress">
+          <div class="progress-bar" id="analyze-bar"></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="analyze-btn" onclick="runAnalyze('dir')">
+            ▶ 폴더 전체 분석
+          </button>
+          <button class="btn btn-amber" id="analyze-sel-btn" onclick="runAnalyze('files')" disabled>
+            ▶ 선택 파일 분석
+          </button>
+          <button class="btn btn-ghost" onclick="clearAnalyze()">초기화</button>
+          <span class="hint" id="analyze-hint"></span>
+        </div>
+      </div>
+
+      <!-- 콘솔 -->
+      <div class="console-wrap">
+        <div class="console-header">
+          <div class="console-dots"><span></span><span></span><span></span></div>
+          <span class="console-label">analyzer — 실행 로그</span>
+          <span class="console-status" id="analyze-console-status">대기 중</span>
+        </div>
+        <div class="console-body" id="analyze-console">
+          <span class="log-dim">— 분석을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>
+        </div>
+      </div>
+
+      <!-- 분석 결과 -->
+      <div id="analyze-results" style="display:none">
+
+        <!-- 요약 카드 -->
+        <div class="result-grid" id="analyze-stat-grid"></div>
+
+        <div class="divider"></div>
+
+        <!-- 서브탭 -->
+        <div class="an-subtabs">
+          <button class="an-stab active" onclick="anTab(0)">단어 빈도</button>
+          <button class="an-stab" onclick="anTab(1)">품사 분포</button>
+          <button class="an-stab" onclick="anTab(2)">공출현 네트워크</button>
+          <button class="an-stab" onclick="anTab(3)">파일별 키워드</button>
+        </div>
+
+        <!-- 서브패널 0: 단어 빈도 -->
+        <div class="an-panel active" id="an-panel-0">
+          <div class="card">
+            <div class="card-title">명사 빈도 Top 30</div>
+            <div class="chart-box h360"><canvas id="chart-noun"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">내용어 빈도 Top 20 <span
+                style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11px">(명사·외래어·어근·동사·형용사·부사)</span>
+            </div>
+            <div class="chart-box h300"><canvas id="chart-content"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              워드 클라우드
+              <span style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11px;margin-left:8px">명사 상위 100개 · 크기 = 빈도</span>
+            </div>
+            <div class="chart-box h480" id="wc-container" style="display:flex;align-items:center;justify-content:center;">
+              <canvas id="wc-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="an-panel" id="an-panel-1">
+          <div class="chart-grid-2">
+            <div class="card">
+              <div class="card-title">품사 그룹별 분포</div>
+              <div class="chart-box h300"><canvas id="chart-pos-group"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-title">품사 비율 (내용어 중심)</div>
+              <div class="chart-box h300"><canvas id="chart-pos-bar"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 서브패널 2: 공출현 네트워크 -->
+        <div class="an-panel" id="an-panel-2">
+          <div class="card">
+            <div class="card-title">
+              동일 슬라이드 출현 네트워크
+              <span
+                style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11px;margin-left:8px">
+                노드 크기 = 빈도 | 선 굵기 = 공출현 횟수
+              </span>
+            </div>
+            <div class="chart-box h480">
+              <svg id="net-svg"></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 서브패널 3: 파일별 키워드 -->
+        <div class="an-panel" id="an-panel-3">
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-toolbar" style="padding:16px 20px 12px;">
+              <span class="table-title">📋 파일별 분석 결과</span>
+              <span class="table-count" id="an-file-count">0개</span>
+              <input class="table-filter" id="an-file-filter" placeholder="파일명 필터…" oninput="filterAnTable()">
+            </div>
+            <div class="table-wrap" style="max-height:600px">
+              <table id="an-file-table">
+                <thead>
+                  <tr>
+                    <th style="width:25%">파일명</th>
+                    <th style="width:70px;text-align:center">슬라이드</th>
+                    <th style="width:35%">주요 명사 <span style="color:var(--accent);font-size:10px">●</span></th>
+                    <th>TF-IDF 핵심어 <span style="color:var(--amber);font-size:10px">●</span></th>
+                  </tr>
+                </thead>
+                <tbody id="an-file-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+      </div><!-- /analyze-results -->
+
+    </div><!-- /panel-analyze -->
+
+  </div><!-- /wrap -->
+
+  <script>
+    // ── 탭 전환 ──────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // ── 서버 상태 확인 ────────────────────────────────────────────────────────────
+    async function checkHealth() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      try {
+        const r = await fetch('/api/health');
+        if (r.ok) {
+          const d = await r.json();
+          dot.className = 'status-dot on';
+          text.textContent = `서버 정상 · ${d.python}`;
+        } else throw new Error();
+      } catch {
+        dot.className = 'status-dot err';
+        text.textContent = '서버 연결 실패';
+      }
+    }
+    checkHealth();
+
+    // ── 디렉토리 확인 ─────────────────────────────────────────────────────────────
+    async function checkDir(inputId, hintId) {
+      const dir = document.getElementById(inputId).value.trim();
+      const hint = document.getElementById(hintId);
+      const input = document.getElementById(inputId);
+      if (!dir) { hint.textContent = '경로를 입력하세요.'; hint.className = 'dir-hint err'; return; }
+      hint.textContent = '확인 중…'; hint.className = 'dir-hint';
+      try {
+        const r = await fetch('/api/check-dir', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dir })
+        });
+        const d = await r.json();
+        if (d.exists) {
+          hint.textContent = '✓ 유효한 디렉토리입니다.';
+          hint.className = 'dir-hint ok';
+          input.classList.add('valid'); input.classList.remove('invalid');
+          if (inputId === 'analyze-dir') loadPptxList();
+        } else {
+          hint.textContent = '✗ 디렉토리를 찾을 수 없습니다.';
+          hint.className = 'dir-hint err';
+          input.classList.add('invalid'); input.classList.remove('valid');
+        }
+      } catch {
+        hint.textContent = '서버 오류';
+        hint.className = 'dir-hint err';
+      }
+    }
+
+    // ── 콘솔 초기화 ──────────────────────────────────────────────────────────────
+    function clearConsole(type) {
+      const el = document.getElementById(`${type}-console`);
+      el.innerHTML = `<span class="log-dim">— 초기화되었습니다 —</span>`;
+      document.getElementById(`${type}-console-status`).textContent = '대기 중';
+      document.getElementById(`${type}-stats`).style.display = 'none';
+      document.getElementById(`${type}-progress`).classList.remove('show');
+      document.getElementById(`${type}-table-section`).classList.remove('show');
+      document.getElementById(`${type}-tbody`).innerHTML = '';
+      setRunning(type, false);
+    }
+
+    // ── 버튼 잠금 ─────────────────────────────────────────────────────────────────
+    function setRunning(type, running) {
+      document.getElementById(`${type}-btn`).disabled = running;
+      const prog = document.getElementById(`${type}-progress`);
+      const bar = document.getElementById(`${type}-bar`);
+      if (running) {
+        prog.classList.add('show');
+        bar.style.width = '0%';
+        // 애니메이션용 가짜 진행
+        let w = 0;
+        const iv = setInterval(() => {
+          w = Math.min(w + (Math.random() * 4), 88);
+          bar.style.width = w + '%';
+        }, 300);
+        prog._interval = iv;
+      } else {
+        clearInterval(prog._interval);
+        bar.style.width = '100%';
+        setTimeout(() => { prog.classList.remove('show'); bar.style.width = '0%'; }, 800);
+      }
+    }
+
+    // ── 로그 컬러 처리 ────────────────────────────────────────────────────────────
+    function colorize(text) {
+      if (text.includes('✅') || text.includes('완료') || text.includes('OK'))
+        return `<span class="log-success">${esc(text)}</span>`;
+      if (text.includes('⚠') || text.includes('오류') || text.includes('없음'))
+        return `<span class="log-warn">${esc(text)}</span>`;
+      if (text.includes('Traceback') || text.includes('Error'))
+        return `<span class="log-error">${esc(text)}</span>`;
+      if (text.startsWith('📂') || text.startsWith('🔍'))
+        return `<span class="log-info">${esc(text)}</span>`;
+      if (text.startsWith('─') || text.startsWith('총') || text.startsWith('검색'))
+        return `<span class="log-dim">${esc(text)}</span>`;
+      return esc(text);
+    }
+    const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // ── SSE 스트림 구독 ───────────────────────────────────────────────────────────
+    function streamAPI(endpoint, body, type, onDone, resultsUrl = '/api/results') {
+      const console_ = document.getElementById(`${type}-console`);
+      const status = document.getElementById(`${type}-console-status`);
+      console_.innerHTML = '';
+      status.textContent = '실행 중…';
+      setRunning(type, true);
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(async res => {
+        if (!res.ok) {
+          const e = await res.json().catch(() => ({ error: res.statusText }));
+          console_.innerHTML += `<span class="log-error">${esc(e.error || '서버 오류')}</span>\n`;
+          status.textContent = '오류';
+          setRunning(type, false);
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        const pump = async () => {
+          const { value, done } = await reader.read();
+          if (done) { setRunning(type, false); return; }
+          buf += decoder.decode(value, { stream: true });
+          const parts = buf.split('\n\n');
+          buf = parts.pop();
+          for (const part of parts) {
+            const line = part.replace(/^data: /, '').trim();
+            if (!line) continue;
+            try {
+              const msg = JSON.parse(line);
+              if (msg.type === 'log') {
+                msg.data.split('\n').forEach(l => {
+                  if (l.trim()) console_.innerHTML += colorize(l) + '\n';
+                });
+                console_.scrollTop = console_.scrollHeight;
+              }
+              if (msg.type === 'done') {
+                const ok = msg.data.code === 0;
+                status.textContent = ok ? '완료' : `종료 코드 ${msg.data.code}`;
+                setRunning(type, false);
+                if (ok && msg.data.savedFile) {
+                  console_.innerHTML += `\n<span class="log-info">📁 저장 위치: ${esc(msg.data.savedFile)}</span>\n`;
+                  console_.scrollTop = console_.scrollHeight;
+                }
+                // 결과 표: done 후 별도 GET 요청으로 가져오기
+                if (ok) {
+                  fetch(resultsUrl)
+                    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+                    .then(data => {
+                      if (type === 'analyze') {
+                        if (data && !data.error) renderAnalysisResults(data);
+                      } else if (Array.isArray(data) && data.length > 0) {
+                        renderTable(type, data);
+                      }
+                    })
+                    .catch(e => console_.innerHTML += `<span class="log-warn">⚠ 표 로드 실패: ${esc(e.message)}</span>\n`);
+                }
+                if (ok && onDone) onDone(console_.textContent);
+              }
+              if (msg.type === 'error') {
+                console_.innerHTML += `<span class="log-error">${esc(msg.data)}</span>\n`;
+                status.textContent = '오류';
+                setRunning(type, false);
+              }
+            } catch { }
+          }
+          pump();
+        };
+        pump();
+      }).catch(err => {
+        console_.innerHTML += `<span class="log-error">${esc(err.message)}</span>\n`;
+        status.textContent = '연결 오류';
+        setRunning(type, false);
+      });
+    }
+
+    // ── 스캔 실행 ─────────────────────────────────────────────────────────────────
+    function runScan() {
+      const dir = document.getElementById('scan-dir').value.trim();
+      const output = document.getElementById('scan-output').value.trim();
+      const hint = document.getElementById('scan-hint');
+      if (!dir) { hint.textContent = '⚠ 디렉토리 경로를 입력하세요.'; return; }
+      hint.textContent = '';
+
+      streamAPI('/api/scan', { dir, output }, 'scan', (log) => {
+        // 로그에서 간단한 통계 파싱
+        const mFiles = log.match(/총\s+(\d+)개의 \.pptx/);
+        const mSlides = [...log.matchAll(/슬라이드\s+(\d+)개/g)];
+        const mErr = (log.match(/⚠/g) || []).length;
+        const total = mFiles ? +mFiles[1] : 0;
+        const totalSlides = mSlides.reduce((s, m) => s + +m[1], 0);
+        document.getElementById('scan-stat-files').textContent = total;
+        document.getElementById('scan-stat-ok').textContent = total - mErr;
+        document.getElementById('scan-stat-slides').textContent = totalSlides;
+        document.getElementById('scan-stat-err').textContent = mErr;
+        document.getElementById('scan-stats').style.display = 'block';
+      });
+    }
+
+    // ── 검색 실행 ─────────────────────────────────────────────────────────────────
+    function runSearch() {
+      const dir = document.getElementById('search-dir').value.trim();
+      const keyword = document.getElementById('search-keyword').value.trim();
+      const output = document.getElementById('search-output').value.trim();
+      const hint = document.getElementById('search-hint');
+      if (!dir) { hint.textContent = '⚠ 디렉토리 경로를 입력하세요.'; return; }
+      if (!keyword) { hint.textContent = '⚠ 검색어를 입력하세요.'; return; }
+      hint.textContent = '';
+
+      streamAPI('/api/search', { dir, keyword, output }, 'search', (log) => {
+        const mFiles = log.match(/탐색 파일 수:\s*(\d+)/);
+        const mHits = log.match(/총\s+(\d+)건/);
+        const mHitFiles = log.match(/(\d+)개 파일에서 발견/);
+        document.getElementById('search-stat-files').textContent = mFiles ? mFiles[1] : '?';
+        document.getElementById('search-stat-hits').textContent = mHits ? mHits[1] : '?';
+        document.getElementById('search-stat-hitfiles').textContent = mHitFiles ? mHitFiles[1] : '?';
+        document.getElementById('search-stats').style.display = 'block';
+      });
+    }
+
+    // ── 테이블 상태 ────────────────────────────────────────────────────────────
+    const tableData = { scan: [], search: [] };
+    const sortState = { scan: { col: -1, asc: true }, search: { col: -1, asc: true } };
+
+    // ── 테이블 렌더링 ───────────────────────────────────────────────────────────
+    function renderTable(type, data) {
+      tableData[type] = data;
+      applyFilter(type, data);
+      document.getElementById(`${type}-table-section`).classList.add('show');
+    }
+
+    function applyFilter(type, data) {
+      const kw = (document.getElementById(`${type}-filter`).value || '').toLowerCase();
+      const filtered = kw
+        ? data.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(kw)))
+        : data;
+      drawRows(type, filtered);
+      // 파일명 클릭 이벤트 위임 (검색 결과 테이블)
+      if (type === 'search') {
+        document.querySelectorAll('#search-tbody .file-link[data-filepath]').forEach(el => {
+          el.addEventListener('click', () => openFile(decodeURIComponent(el.dataset.filepath)));
+        });
+      }
+    }
+
+    function filterTable(type) { applyFilter(type, tableData[type]); }
+
+    function drawRows(type, rows) {
+      const tbody = document.getElementById(`${type}-tbody`);
+      document.getElementById(`${type}-table-count`).textContent = `${rows.length}건`;
+
+      if (type === 'scan') {
+        tbody.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td class="num-cell">${i + 1}</td>
+        <td>${esc(r['파일명'] || '')}</td>
+        <td>${esc(r['제목'] || '')}</td>
+        <td class="num-cell">${r['슬라이드 수'] ?? '-'}</td>
+        <td class="badge-cell">
+          <span class="badge ${r['상태'] === 'OK' ? 'badge-ok' : 'badge-err'}">
+            ${esc(r['상태'] || '')}
+          </span>
+        </td>
+      </tr>`).join('');
+      } else {
+        const kw = document.getElementById('search-keyword').value.trim();
+        tbody.innerHTML = rows.map((r, i) => {
+          const ctx = esc(r['문맥 미리보기'] || '');
+          const highlighted = kw
+            ? ctx.replace(new RegExp(esc(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+              m => `<span class="highlight">${m}</span>`)
+            : ctx;
+          const srcClass = { '본문': 'badge-body', '표': 'badge-table', '노트': 'badge-note', '기타(XML)': 'badge-xml' }[r['출처']] || 'badge-body';
+          return `
+      <tr>
+        <td class="num-cell">${i + 1}</td>
+        <td><span class="file-link" data-filepath="${encodeURIComponent(r['절대 경로'] || '')}" title="클릭하여 파일 열기">${esc(r['파일명'] || '')}</span></td>
+        <td class="num-cell">${r['슬라이드 번호'] ?? '-'}</td>
+        <td>${esc(r['슬라이드 제목'] || '')}</td>
+        <td class="badge-cell"><span class="badge ${srcClass}">${esc(r['출처'] || '')}</span></td>
+        <td style="font-size:11px;color:var(--amber)">${esc(r['매칭 키워드'] || '')}</td>
+        <td class="num-cell">${r['등장 횟수'] ?? '-'}</td>
+        <td class="context-text" onclick="this.classList.toggle('expanded');this.querySelector('.ctx-toggle').textContent=this.classList.contains('expanded')?'▲ 접기':'▼ 더보기'">
+          <div class="ctx-body">${highlighted}</div>
+          <span class="ctx-toggle">▼ 더보기</span>
+        </td>
+      </tr>`;
+        }).join('');
+      }
+    }
+
+    // ── 컬럼 정렬 ───────────────────────────────────────────────────────────────
+    function sortTable(type, col) {
+      const st = sortState[type];
+      st.asc = st.col === col ? !st.asc : true;
+      st.col = col;
+
+      // 헤더 표시
+      document.querySelectorAll(`#${type}-table thead th`).forEach((th, i) => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (i === col) th.classList.add(st.asc ? 'sort-asc' : 'sort-desc');
+      });
+
+      const keys = type === 'scan'
+        ? ['번호', '파일명', '제목', '슬라이드 수', '상태']
+        : ['번호', '파일명', '슬라이드 번호', '슬라이드 제목', '출처', '매칭 키워드', '등장 횟수', '문맥 미리보기'];
+
+      const key = keys[col];
+      const sorted = [...tableData[type]].sort((a, b) => {
+        const va = a[key] ?? ''; const vb = b[key] ?? '';
+        const cmp = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'ko');
+        return st.asc ? cmp : -cmp;
+      });
+      drawRows(type, sorted);
+    }
+
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // 분석 탭 (ANALYZE)
+    // ════════════════════════════════════════════════════════════════════════════
+    let _anFiles = [];   // 전체 PPTX 파일 목록 [{name, path, rel}]
+    let _anData = null; // 마지막 분석 결과
+    let _anCharts = {};   // Chart.js 인스턴스 캐시
+
+    // ── PPTX 파일 목록 로드 ─────────────────────────────────────────────────────
+    async function loadPptxList() {
+      const dir = document.getElementById('analyze-dir').value.trim();
+      const hint = document.getElementById('analyze-dir-hint');
+      if (!dir) { hint.textContent = '경로를 입력하세요.'; hint.className = 'dir-hint err'; return; }
+
+      hint.textContent = '파일 목록 불러오는 중…'; hint.className = 'dir-hint';
+      document.getElementById('analyze-file-section').classList.remove('show');
+
+      try {
+        const r = await fetch('/api/list-pptx?path=' + encodeURIComponent(dir));
+        const d = await r.json();
+        if (!r.ok || d.error) throw new Error(d.error || '오류');
+
+        _anFiles = d.files;
+        hint.textContent = `✓ ${d.count}개의 PPTX 파일 발견`; hint.className = 'dir-hint ok';
+        document.getElementById('analyze-file-count').textContent = `${d.count}개 파일`;
+        renderFileList(_anFiles);
+        document.getElementById('analyze-file-section').classList.add('show');
+        updateSelBtn();
+      } catch (e) {
+        hint.textContent = `✗ ${e.message}`; hint.className = 'dir-hint err';
+      }
+    }
+
+    function renderFileList(files) {
+      const ul = document.getElementById('analyze-file-list');
+      ul.innerHTML = files.map(f => `
+    <div class="file-item" onclick="this.querySelector('input').click();event.stopPropagation()">
+      <input type="checkbox" class="file-cb" data-path="${encodeURIComponent(f.path)}"
+             onchange="updateSelBtn()" onclick="event.stopPropagation()">
+      <span style="font-size:13px;flex-shrink:0">📄</span>
+      <span class="file-item-name" title="${esc(f.path)}">${esc(f.name)}</span>
+      <span class="file-item-rel">${esc(f.rel)}</span>
+    </div>`).join('');
+
+      // 전체 선택 체크박스 초기화
+      const allCb = document.getElementById('check-all');
+      if (allCb) allCb.checked = false;
+    }
+
+    function toggleAllFiles(checked) {
+      document.querySelectorAll('.file-cb').forEach(cb => cb.checked = checked);
+      updateSelBtn();
+    }
+
+    function updateSelBtn() {
+      const selected = document.querySelectorAll('.file-cb:checked');
+      const btn = document.getElementById('analyze-sel-btn');
+      const cnt = document.getElementById('analyze-sel-count');
+      btn.disabled = selected.length === 0;
+      cnt.textContent = selected.length > 0 ? `${selected.length}개 선택됨` : '';
+      btn.textContent = `▶ 선택 파일 분석 (${selected.length}개)`;
+    }
+
+    // ── 분석 실행 ─────────────────────────────────────────────────────────────────
+    function runAnalyze(mode) {
+      const dir = document.getElementById('analyze-dir').value.trim();
+      const hint = document.getElementById('analyze-hint');
+      hint.textContent = '';
+
+      document.getElementById('analyze-results').style.display = 'none';
+      _anData = null;
+
+      if (mode === 'files') {
+        const selected = [...document.querySelectorAll('.file-cb:checked')]
+          .map(cb => decodeURIComponent(cb.dataset.path));
+        if (!selected.length) { hint.textContent = '⚠ 파일을 선택하세요.'; return; }
+        streamAPI('/api/analyze', { files: selected }, 'analyze', null, '/api/analyze-results');
+      } else {
+        if (!dir) { hint.textContent = '⚠ 디렉토리 경로를 입력하세요.'; return; }
+        streamAPI('/api/analyze', { dir }, 'analyze', null, '/api/analyze-results');
+      }
+    }
+
+    // ── 초기화 ────────────────────────────────────────────────────────────────────
+    function clearAnalyze() {
+      document.getElementById('analyze-console').innerHTML =
+        '<span class="log-dim">— 분석을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>';
+      document.getElementById('analyze-console-status').textContent = '대기 중';
+      document.getElementById('analyze-dir-hint').textContent = '';
+      document.getElementById('analyze-hint').textContent = '';
+      document.getElementById('analyze-results').style.display = 'none';
+      document.getElementById('analyze-file-section').classList.remove('show');
+      document.getElementById('analyze-file-list').innerHTML = '';
+      document.getElementById('analyze-sel-btn').disabled = true;
+      document.getElementById('analyze-sel-count').textContent = '';
+      const allCb = document.getElementById('check-all');
+      if (allCb) allCb.checked = false;
+      _anFiles = []; _anData = null;
+      Object.values(_anCharts).forEach(c => { try { c.destroy(); } catch (_) { } });
+      _anCharts = {};
+      setRunning('analyze', false);
+    }
+
+    // ── 서브탭 전환 ───────────────────────────────────────────────────────────────
+    function anTab(idx) {
+      document.querySelectorAll('.an-stab').forEach((b, i) => b.classList.toggle('active', i === idx));
+      document.querySelectorAll('.an-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+      // 네트워크는 탭 활성화 시 렌더 (SVG 크기가 이 시점에 확정됨)
+      if (idx === 2 && _anData) renderNetwork(_anData.cooc_nodes, _anData.cooccurrence);
+    }
+
+    // ── 결과 전체 렌더링 ──────────────────────────────────────────────────────────
+    function renderAnalysisResults(data) {
+      _anData = data;
+
+      // 요약 카드
+      const totalNounTok = data.total_noun_tokens ?? data.noun_freq.reduce((s, x) => s + x.count, 0);
+      const totalTypes = data.total_vocab ?? data.noun_freq.length;
+      document.getElementById('analyze-stat-grid').innerHTML = `
+    <div class="result-stat accent"><div class="num">${data.total_files}</div><div class="lbl">분석 파일 수</div></div>
+    <div class="result-stat green"><div class="num">${totalNounTok.toLocaleString()}</div><div class="lbl">명사 토큰 수</div></div>
+    <div class="result-stat amber"><div class="num">${totalTypes.toLocaleString()}</div><div class="lbl">고유 명사 어휘</div></div>
+    <div class="result-stat"><div class="num">${data.cooccurrence.length}</div><div class="lbl">공출현 쌍 <span style="font-size:10px;opacity:.6">(상위 40쌍 분석)</span></div>
+  `;
+
+      // 차트 렌더
+      renderNounCharts(data);
+      renderPosCharts(data);
+      renderFileTable(data.files);
+
+      // 네트워크는 패널이 보일 때 렌더 (현재 활성 탭이 2번이면 즉시)
+      if (document.getElementById('an-panel-2').classList.contains('active'))
+        renderNetwork(data.cooc_nodes, data.cooccurrence);
+
+      document.getElementById('analyze-results').style.display = 'block';
+      document.getElementById('analyze-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // 워드 클라우드 — DOM 렌더 후 캔버스 크기가 확정된 시점에 그림
+      setTimeout(() => renderWordCloud(data.wc_freq || data.noun_freq), 300);
+    }
+
+    // ── 차트 팔레트 (플랫폼 다크 테마 기반) ──────────────────────────────────────
+    // --accent(#4f7cff)·--amber(#f5a623) 중심, 채도를 낮춰 통일감 부여
+    const AN_PALETTE = [
+      '#4f7cff', // accent blue  (메인)
+      '#7b5fff', // violet       (보조)
+      '#2ec4b6', // teal
+      '#f5a623', // amber
+      '#e05c7e', // rose
+      '#56c9a0', // mint
+      '#7cb4ff', // sky blue
+      '#c47aff', // lavender
+      '#ff8c5a', // coral
+      '#5cc8e4', // cyan
+    ];
+
+    function mkChart(id, config) {
+      if (_anCharts[id]) { try { _anCharts[id].destroy(); } catch (_) { } }
+      _anCharts[id] = new Chart(document.getElementById(id).getContext('2d'), config);
+      return _anCharts[id];
+    }
+
+    // ── 단어 빈도 차트 ────────────────────────────────────────────────────────────
+    function renderNounCharts(data) {
+      const barOpts = (label, color) => ({
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()}회` } },
+        },
+        scales: {
+          x: {
+            ticks: { color: '#8b90a8', font: { size: 11 }, maxRotation: 45 },
+            grid: { color: '#2a2f3d' }
+          },
+          y: {
+            beginAtZero: true, ticks: { color: '#8b90a8', font: { size: 11 } },
+            grid: { color: '#2a2f3d' }
+          },
+        },
+      });
+
+      mkChart('chart-noun', {
+        type: 'bar',
+        data: {
+          labels: data.noun_freq.map(x => x.word),
+          datasets: [{
+            data: data.noun_freq.map(x => x.count),
+            backgroundColor: '#4f7cff99', borderColor: '#4f7cff',
+            borderWidth: 1, borderRadius: 3,
+          }],
+        },
+        options: barOpts('빈도', '#4f7cff'),
+      });
+
+      mkChart('chart-content', {
+        type: 'bar',
+        data: {
+          labels: data.content_freq.map(x => x.word),
+          datasets: [{
+            data: data.content_freq.map(x => x.count),
+            backgroundColor: '#2ecc7199', borderColor: '#2ecc71',
+            borderWidth: 1, borderRadius: 3,
+          }],
+        },
+        options: barOpts('빈도', '#2ecc71'),
+      });
+    }
+
+    // ── 품사 분포 차트 ────────────────────────────────────────────────────────────
+    function renderPosCharts(data) {
+      // ── 품사 계열별 색상 (같은 계열 = 같은 톤 패밀리) ───────────────────────
+      // 명사 계열 (blue)  동/형 계열 (green)  부/관 계열 (amber)  조/어 계열 (slate)
+      const POS_COLORS = {
+        '일반명사': '#4f7cff',  // blue  — 밝음 (대표)
+        '고유명사': '#7aa8ff',  // blue  — 연함
+        '외래어': '#2ec8d4',  // teal  — 파랑 계열 변주
+        '어근': '#3160cc',  // blue  — 어둠
+        '동사': '#43c88a',  // green — 밝음 (대표)
+        '형용사': '#2a9e68',  // green — 어둠
+        '부사': '#f5a623',  // amber — 밝음 (대표)
+        '관형사': '#c47a1a',  // amber — 어둠
+        '조사': '#7080a8',  // slate — 밝음 (대표)
+        '어미': '#4a5878',  // slate — 어둠
+      };
+
+      const groups = Object.entries(data.pos_groups).filter(([, v]) => v > 0);
+      const labels = groups.map(([k]) => k);
+      const values = groups.map(([, v]) => v);
+      const colors = labels.map(l => POS_COLORS[l] || '#555e7a');
+
+      const doughnutOpts = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right', labels: {
+              color: '#8b90a8', font: { size: 11 }, padding: 10,
+              generateLabels: chart => chart.data.labels.map((lbl, i) => {
+                const hidden = !chart.getDataVisibility(i);
+                return {
+                  text: hidden ? `✕ ${lbl}` : lbl, fillStyle: chart.data.datasets[0].backgroundColor[i],
+                  strokeStyle: '#181c26', lineWidth: 1, hidden, index: i,
+                  fontColor: hidden ? '#3a3f52' : '#8b90a8',
+                  textDecoration: hidden ? 'line-through' : '',
+                };
+              }),
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                return ` ${ctx.raw.toLocaleString()}개 (${((ctx.raw / total) * 100).toFixed(1)}%)`;
+              },
+            }
+          },
+        },
+      };
+
+      mkChart('chart-pos-group', {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 1, borderColor: '#181c26' }] },
+        options: doughnutOpts,
+      });
+
+      // 내용어 중심 수평 바 — 어근·외래어 포함
+      const CONTENT_ORDER = ['일반명사', '고유명사', '외래어', '어근', '동사', '형용사', '부사', '관형사'];
+      const contentGroups = CONTENT_ORDER
+        .map(k => [k, data.pos_groups[k] || 0])
+        .filter(([, v]) => v > 0);
+
+      mkChart('chart-pos-bar', {
+        type: 'bar',
+        data: {
+          labels: contentGroups.map(([k]) => k),
+          datasets: [{
+            data: contentGroups.map(([, v]) => v),
+            backgroundColor: contentGroups.map(([k]) => POS_COLORS[k] || '#555e7a'),
+            borderRadius: 4, borderWidth: 0,
+          }],
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8b90a8', font: { size: 11 } }, grid: { color: '#2a2f3d' } },
+            y: { ticks: { color: '#8b90a8', font: { size: 12 } }, grid: { display: false } },
+          },
+        },
+      });
+    }
+
+    // ── 공출현 네트워크 (D3.js) ──────────────────────────────────────────────────
+    function renderNetwork(nodes, links) {
+      const svgEl = document.getElementById('net-svg');
+      const d3Svg = d3.select(svgEl);
+      d3Svg.selectAll('*').remove();
+
+      if (!nodes || !nodes.length) {
+        d3Svg.append('text').attr('x', '50%').attr('y', '50%')
+          .attr('text-anchor', 'middle').attr('fill', '#50566b').attr('font-size', 13)
+          .text('공출현 데이터가 없습니다.');
+        return;
+      }
+
+      const W = svgEl.clientWidth || 700;
+      const H = svgEl.clientHeight || 480;
+
+      const freqMax = Math.max(...nodes.map(nd => nd.freq)) || 1;
+      const cntMax = Math.max(...links.map(l => l.count)) || 1;
+      const rScale = d3.scaleSqrt().domain([1, freqMax]).range([5, 24]);
+      const wScale = d3.scaleLinear().domain([1, cntMax]).range([0.3, 2.5]); // ④ 더 가늘게
+
+      // ③ 연결 강도(가중 차수) 계산 — 시뮬레이션 전에 원본 links 기준으로
+      const degreeMap = {};
+      nodes.forEach(nd => { degreeMap[nd.id] = 0; });
+      links.forEach(l => {
+        degreeMap[l.source] = (degreeMap[l.source] || 0) + l.count;
+        degreeMap[l.target] = (degreeMap[l.target] || 0) + l.count;
+      });
+      const degMax = Math.max(...Object.values(degreeMap)) || 1;
+      const degSorted = Object.entries(degreeMap).sort((a, b) => b[1] - a[1]);
+      const topN = Math.max(1, Math.ceil(nodes.length * 0.2));
+      const topSet = new Set(degSorted.slice(0, topN).map(([id]) => id));
+
+      // 중심 노드: amber 패밀리 (저→고 연결도: #7a4e10 → #f5a623)
+      // 주변 노드: blue  패밀리 (저→고 연결도: #1a2a50 → #4f7cff)
+      const topDeg = degSorted.slice(0, topN).map(([, d]) => d);
+      const otherDeg = degSorted.slice(topN).map(([, d]) => d);
+      const amberScale = d3.scaleLinear()
+        .domain([Math.min(...topDeg) || 0, Math.max(...topDeg) || 1])
+        .range(['#7a4e10', '#f5a623']);
+      const blueScale = d3.scaleLinear()
+        .domain([Math.min(...(otherDeg.length ? otherDeg : [0])) || 0,
+        Math.max(...(otherDeg.length ? otherDeg : [1])) || 1])
+        .range(['#1a2a50', '#4f7cff']);
+
+      const nodeColor = nd => topSet.has(nd.id) ? amberScale(degreeMap[nd.id] || 0)
+        : blueScale(degreeMap[nd.id] || 0);
+      const labelColor = nd => topSet.has(nd.id) ? amberScale(degreeMap[nd.id] || 0) : '#8b90a8';
+
+      const linkData = links.map(l => ({ source: l.source, target: l.target, count: l.count }));
+
+      const sim = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(linkData).id(nd => nd.id).distance(90))
+        .force('charge', d3.forceManyBody().strength(-180))
+        .force('center', d3.forceCenter(W / 2, H / 2))
+        .force('collision', d3.forceCollide().radius(nd => rScale(nd.freq) + 5));
+
+      const g = d3Svg.append('g');
+
+      // 줌/패닝
+      d3Svg.call(d3.zoom().scaleExtent([0.25, 3])
+        .on('zoom', e => g.attr('transform', e.transform)));
+
+      // 엣지 — 강도 반영: 굵기 + 투명도 모두 연결 횟수에 비례
+      const link = g.append('g').selectAll('line')
+        .data(linkData).join('line')
+        .attr('stroke', '#3d4561')
+        .attr('stroke-opacity', l => 0.2 + 0.55 * (l.count / cntMax))
+        .attr('stroke-width', l => wScale(l.count));
+
+      // 노드 — 중심/비중심 두 패밀리 × 연결 강도별 톤
+      const node = g.append('g').selectAll('g')
+        .data(nodes).join('g')
+        .call(d3.drag()
+          .on('start', (e, nd) => { if (!e.active) sim.alphaTarget(0.3).restart(); nd.fx = nd.x; nd.fy = nd.y; })
+          .on('drag', (e, nd) => { nd.fx = e.x; nd.fy = e.y; })
+          .on('end', (e, nd) => { if (!e.active) sim.alphaTarget(0); nd.fx = null; nd.fy = null; }));
+
+      node.append('circle')
+        .attr('r', nd => rScale(nd.freq))
+        .attr('fill', nd => nodeColor(nd))
+        .attr('fill-opacity', 0.9)
+        .attr('stroke', '#0b0d11')
+        .attr('stroke-width', 1.5);
+
+      node.append('text')
+        .text(nd => nd.id)
+        .attr('x', nd => rScale(nd.freq) + 4)
+        .attr('y', 4)
+        .attr('font-size', nd => topSet.has(nd.id) ? 12 : 11)
+        .attr('font-weight', nd => topSet.has(nd.id) ? 600 : 400)
+        .attr('fill', nd => labelColor(nd))
+        .style('pointer-events', 'none');
+
+      sim.on('tick', () => {
+        link.attr('x1', l => l.source.x).attr('y1', l => l.source.y)
+          .attr('x2', l => l.target.x).attr('y2', l => l.target.y);
+        node.attr('transform', nd => `translate(${nd.x},${nd.y})`);
+      });
+    }
+
+    // ── 파일별 키워드 테이블 ──────────────────────────────────────────────────────
+    let _anFileData = [];
+    function renderFileTable(files) {
+      _anFileData = files;
+      applyAnFilter(files);
+      document.getElementById('an-file-count').textContent = `${files.length}개`;
+    }
+    function filterAnTable() {
+      const kw = (document.getElementById('an-file-filter').value || '').toLowerCase();
+      const filtered = kw
+        ? _anFileData.filter(f => f.filename.toLowerCase().includes(kw))
+        : _anFileData;
+      applyAnFilter(filtered);
+    }
+    function applyAnFilter(files) {
+      const tbody = document.getElementById('an-file-tbody');
+      tbody.innerHTML = files.map(f => {
+        if (f.error) return `
+      <tr>
+        <td title="${esc(f.fullpath)}">${esc(f.filename)}</td>
+        <td class="num-cell">—</td>
+        <td colspan="2"><span class="badge badge-err">⚠ ${esc(f.error)}</span></td>
+      </tr>`;
+        const nouns = (f.top_nouns || []).map(w => `<span class="an-tag an-tag-noun">${esc(w)}</span>`).join('');
+        const tfidf = (f.top_tfidf || []).map(x => `<span class="an-tag an-tag-tfidf">${esc(x.word)}</span>`).join('');
+        return `
+      <tr>
+        <td><span style="cursor:pointer;color:var(--accent)" onclick="openFile('${esc(f.fullpath)}')" title="클릭하여 파일 열기">${esc(f.filename)}</span></td>
+        <td class="num-cell">${f.slides}</td>
+        <td>${nouns}</td>
+        <td>${tfidf || '<span style="color:var(--text-3);font-size:11px">단일 파일 — TF-IDF 미적용</span>'}</td>
+      </tr>`;
+      }).join('');
+    }
+
+    // ── 워드 클라우드 (wordcloud2.js) ────────────────────────────────────────────
+    const WC_COLORS = [
+      '#4f7cff', '#7aa8ff', '#2ec8d4', '#3160cc',  // blue 계열
+      '#f5a623', '#c47a1a',                          // amber 계열
+      '#43c88a', '#7b5fff', '#56c9a0', '#5cc8e4',   // green·violet·cyan
+    ];
+
+    function renderWordCloud(freqData) {
+      if (!freqData || !freqData.length || typeof WordCloud === 'undefined') return;
+
+      const container = document.getElementById('wc-container');
+      const canvas    = document.getElementById('wc-canvas');
+      if (!container || !canvas) return;
+
+      const W = container.clientWidth  || 700;
+      const H = container.clientHeight || 460;
+      canvas.width  = W;
+      canvas.height = H;
+
+      const counts  = freqData.map(x => x.count);
+      const maxCnt  = Math.max(...counts) || 1;
+      const minCnt  = Math.min(...counts) || 1;
+
+      // 빈도를 폰트 크기(px)로 매핑 — 로그 스케일로 극단값 완화
+      const logMax = Math.log(maxCnt + 1);
+      const logMin = Math.log(minCnt + 1);
+      const sizeOf = cnt => {
+        const ratio = (Math.log(cnt + 1) - logMin) / (logMax - logMin || 1);
+        return Math.round(18 + ratio * (Math.min(W, H) * 0.18));
+      };
+
+      const list = freqData.map(x => [x.word, sizeOf(x.count)]);
+
+      WordCloud(canvas, {
+        list,
+        gridSize:     Math.round(W / 60),
+        weightFactor: 1,
+        fontFamily:   "'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif",
+        color:        () => WC_COLORS[Math.floor(Math.random() * WC_COLORS.length)],
+        backgroundColor: 'transparent',
+        rotateRatio:  0,          // 한글 회전 없음
+        rotationSteps: 1,
+        shuffle:      true,
+        drawOutOfBound: false,
+        shrinkToFit:  true,
+      });
+    }
+
+    // confirmDir 수정: analyze-dir 선택 후 자동으로 목록 불러오기
+    const _origConfirmDir = typeof confirmDir === 'function' ? confirmDir : null;
+
+    // ── 파일 열기 ────────────────────────────────────────────────────────────────
+    async function openFile(filePath) {
+      if (!filePath) return;
+      try {
+        const r = await fetch('/api/open-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath })
+        });
+        if (!r.ok) {
+          const e = await r.json();
+          alert('파일 열기 실패: ' + (e.error || r.statusText));
+        }
+      } catch (e) {
+        alert('오류: ' + e.message);
+      }
+    }
+
+    // ── 폴더 브라우저 ──────────────────────────────────────────────────────────
+    let _modalTarget = null;   // 선택 결과를 넣을 input id
+    let _modalCurrent = '';     // 현재 탐색 중인 경로
+    let _modalChosen = '';     // 사용자가 선택(클릭)한 경로
+
+    const BROWSE_DEFAULT = 'C:\\Users\\nalang\\OneDrive\\문서';
+
+    function openModal(inputId) {
+      _modalTarget = inputId;
+      _modalChosen = '';
+      document.getElementById('modal-selected').textContent = '선택된 폴더 없음';
+      document.getElementById('modal-confirm').disabled = true;
+      document.getElementById('browseModal').classList.add('open');
+      // 입력칸에 이미 경로가 있으면 그 위치에서, 없으면 기본 경로에서 시작
+      const existing = (document.getElementById(inputId)?.value || '').trim();
+      browseTo(existing || BROWSE_DEFAULT);
+    }
+
+    function closeModal() {
+      document.getElementById('browseModal').classList.remove('open');
+    }
+
+    function confirmDir() {
+      if (!_modalChosen || !_modalTarget) return;
+      const input = document.getElementById(_modalTarget);
+      const hintId = _modalTarget.replace('-dir', '-dir-hint');
+      input.value = _modalChosen;
+      input.classList.remove('valid', 'invalid');
+      document.getElementById(hintId).textContent = '';
+      closeModal();
+      // 자동으로 유효성 확인
+      checkDir(_modalTarget, hintId);
+      // 분석 탭이면 파일 목록 자동 로드
+      if (_modalTarget === 'analyze-dir') {
+        setTimeout(loadPptxList, 300);
+      }
+    }
+
+    async function browseTo(dirPath) {
+      _modalCurrent = dirPath;
+      const listEl = document.getElementById('modal-list');
+      const pathEl = document.getElementById('modal-path');
+      const selEl = document.getElementById('modal-selected');
+      const confBtn = document.getElementById('modal-confirm');
+      listEl.innerHTML = '<div class="modal-empty">로딩 중…</div>';
+
+      // 현재 경로가 실제 폴더이면 바로 선택 가능
+      if (dirPath) {
+        _modalChosen = dirPath;
+        selEl.textContent = dirPath;
+        confBtn.disabled = false;
+        pathEl.textContent = dirPath;
+      } else {
+        _modalChosen = '';
+        selEl.textContent = '선택된 폴더 없음';
+        confBtn.disabled = true;
+        pathEl.textContent = '내 컴퓨터 (드라이브 선택)';
+      }
+
+      try {
+        const r = await fetch('/api/browse?path=' + encodeURIComponent(dirPath));
+        const d = await r.json();
+        if (d.error) { listEl.innerHTML = `<div class="modal-empty">${esc(d.error)}</div>`; return; }
+
+        let html = '';
+        // 상위 이동
+        if (d.parent !== null) {
+          const upLabel = d.parent === '' ? '⬆ 드라이브 목록으로' : '⬆ 상위 폴더';
+          html += `<div class="modal-item up" data-path="${encodeURIComponent(d.parent)}">
+                 <span class="icon">↩</span>${upLabel}</div>`;
+        }
+
+        const dirItems = d.items.filter(i => i.type !== 'file');
+        const fileItems = d.items.filter(i => i.type === 'file');
+
+        if (dirItems.length === 0 && fileItems.length === 0) {
+          html += '<div class="modal-empty">하위 폴더 및 PPTX 파일 없음</div>';
+        } else {
+          // 폴더·드라이브
+          html += dirItems.map(item => `
+        <div class="modal-item" data-path="${encodeURIComponent(item.path)}">
+          <span class="icon">${item.type === 'drive' ? '💾' : '📁'}</span>
+          ${esc(item.name)}
+        </div>`).join('');
+
+          // PPTX 파일 (탐색 불가, 목록 표시 전용)
+          if (fileItems.length > 0) {
+            html += `<div class="modal-pptx-divider">PPTX 파일 (${fileItems.length}개)</div>`;
+            html += fileItems.map(item => `
+          <div class="modal-item pptx-file">
+            <span class="icon">📄</span>
+            ${esc(item.name)}
+          </div>`).join('');
+          }
+        }
+        listEl.innerHTML = html;
+
+        // 이벤트 위임 — 폴더 항목만 클릭 가능
+        listEl.querySelectorAll('.modal-item[data-path]').forEach(el => {
+          el.addEventListener('click', () => browseTo(decodeURIComponent(el.dataset.path)));
+        });
+      } catch (e) {
+        listEl.innerHTML = `<div class="modal-empty">오류: ${esc(e.message)}</div>`;
+      }
+    }
+
+  </script>
+
+  <!-- ── 폴더 브라우저 모달 ─────────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="browseModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📁 폴더 선택</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕ 닫기</button>
+      </div>
+      <div class="modal-path" id="modal-path">내 컴퓨터</div>
+      <div class="modal-list" id="modal-list">
+        <div class="modal-empty">로딩 중…</div>
+      </div>
+      <div class="modal-footer">
+        <span class="modal-selected" id="modal-selected">선택된 폴더 없음</span>
+        <button class="btn btn-primary btn-sm" id="modal-confirm" onclick="confirmDir()" disabled>선택</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <script>
+    // Chart.js 전역 다크 테마 설정
+    if (typeof Chart !== 'undefined') {
+      Chart.defaults.color = '#8b90a8';
+      Chart.defaults.borderColor = '#2a2f3d';
+      Chart.defaults.backgroundColor = 'transparent';
+      Chart.defaults.font.family = "'Pretendard', 'Noto Sans KR', sans-serif";
+    }
+  </script>
+</body>
+
+</html>
