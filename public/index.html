@@ -2338,7 +2338,7 @@
         const tfidf = (f.top_tfidf || []).map(x => `<span class="an-tag an-tag-tfidf">${esc(x.word)}</span>`).join('');
         return `
       <tr>
-        <td><span style="cursor:pointer;color:var(--accent)" onclick="openFile('${esc(f.fullpath)}')" title="클릭하여 파일 열기">${esc(f.filename)}</span></td>
+        <td><span style="cursor:pointer;color:var(--accent)" data-path="${esc(f.fullpath)}" onclick="openFile(this.dataset.path)" title="클릭하여 파일 열기">${esc(f.filename)}</span></td>
         <td class="num-cell">${f.slides}</td>
         <td>${nouns}</td>
         <td>${tfidf || '<span style="color:var(--text-3);font-size:11px">단일 파일 — TF-IDF 미적용</span>'}</td>
