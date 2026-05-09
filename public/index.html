@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -2040,7 +2040,7 @@
       document.getElementById('analyze-stat-grid').innerHTML = `
     <div class="result-stat accent"><div class="num">${data.total_files}</div><div class="lbl">분석 파일 수</div></div>
     <div class="result-stat green"><div class="num">${totalNounTok.toLocaleString()}</div><div class="lbl">명사 토큰 수</div></div>
-    <div class="result-stat amber"><div class="num">${totalTypes.toLocaleString()}</div><div class="lbl">고유 명사 어휘</div></div>
+    <div class="result-stat amber"><div class="num">${totalTypes.toLocaleString()}</div><div class="lbl">명사 계열 어휘 종류</div></div>
     <div class="result-stat"><div class="num">${data.cooccurrence.length}</div><div class="lbl">공출현 쌍 <span style="font-size:10px;opacity:.6">(상위 40쌍 분석)</span></div>
   `;
 
@@ -2421,7 +2421,7 @@
     let _modalCurrent = '';     // 현재 탐색 중인 경로
     let _modalChosen = '';     // 사용자가 선택(클릭)한 경로
 
-    const BROWSE_DEFAULT = 'C:\\Users\\nalang\\OneDrive\\문서';
+    const BROWSE_DEFAULT = 'C:\\\\Users\\\\lingua\\\\OneDrive\\\\문서';
 
     function openModal(inputId) {
       _modalTarget = inputId;

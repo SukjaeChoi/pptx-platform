@@ -103,7 +103,7 @@ if not defined BROWSE_PATH set "BROWSE_PATH=%USERPROFILE%"
 
 set "BP=%BROWSE_PATH%"
 set "IDX=%~dp0public\index.html"
-powershell -NoProfile -Command "$p=$env:BP -replace '\\','\\\\';$f=$env:IDX;if(Test-Path $f){$c=[IO.File]::ReadAllText($f,[Text.Encoding]::UTF8);$c=$c -replace 'const BROWSE_DEFAULT = ''''[^'''']*'''';',('const BROWSE_DEFAULT = ''''+$p+'''';');[IO.File]::WriteAllText($f,$c,[Text.Encoding]::UTF8);Write-Host '[O] 기본 경로 설정 완료:' $env:BP}else{Write-Host '[X] public\index.html 파일 없음'}"
+powershell -NoProfile -Command "$p=$env:BP -replace '\\','\\\\';$f=$env:IDX;if(Test-Path $f){$c=[IO.File]::ReadAllText($f,[Text.Encoding]::UTF8);$c=$c -replace 'const BROWSE_DEFAULT = ''[^'']*'';',('const BROWSE_DEFAULT = '''+$p+''';');[IO.File]::WriteAllText($f,$c,[System.Text.UTF8Encoding]::new($false));Write-Host '[O] 기본 경로 설정 완료:' $env:BP}else{Write-Host '[X] public\index.html 파일 없음'}"
 
 echo.
 pause
