@@ -1522,7 +1522,7 @@
           <div class="card">
             <div class="card-title">
               워드 클라우드
-              <span style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11px;margin-left:8px">명사 상위 100개 · 크기 = 빈도</span>
+              <span style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11px;margin-left:8px">명사 계열 상위 100개 · 크기 = 빈도</span>
             </div>
             <div class="chart-box h480" id="wc-container" style="display:flex;align-items:center;justify-content:center;">
               <canvas id="wc-canvas"></canvas>
@@ -2039,7 +2039,7 @@
       const totalTypes = data.total_vocab ?? data.noun_freq.length;
       document.getElementById('analyze-stat-grid').innerHTML = `
     <div class="result-stat accent"><div class="num">${data.total_files}</div><div class="lbl">분석 파일 수</div></div>
-    <div class="result-stat green"><div class="num">${totalNounTok.toLocaleString()}</div><div class="lbl">명사 토큰 수</div></div>
+    <div class="result-stat green"><div class="num">${totalNounTok.toLocaleString()}</div><div class="lbl">명사 계열 토큰 수</div></div>
     <div class="result-stat amber"><div class="num">${totalTypes.toLocaleString()}</div><div class="lbl">명사 계열 어휘 종류</div></div>
   `;
 
