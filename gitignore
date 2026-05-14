@@ -4,6 +4,7 @@ node_modules/
 # ── 실행 중 생성되는 임시 파일 ───────────────────────────────
 _results_tmp.json
 _analysis_tmp.json
+_ai_tmp.json
 
 # ── 분석 결과 엑셀 파일 ──────────────────────────────────────
 *.xlsx
