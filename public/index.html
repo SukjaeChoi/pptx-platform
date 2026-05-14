@@ -762,6 +762,17 @@
       white-space: nowrap;
     }
 
+    .file-link {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color var(--trans);
+    }
+
+    .file-link:hover {
+      color: #7fa3ff;
+    }
+
     .badge-ok {
       background: rgba(46, 204, 113, .15);
       color: var(--green);
@@ -1840,9 +1851,9 @@
         ? data.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(kw)))
         : data;
       drawRows(type, filtered);
-      // 파일명 클릭 이벤트 위임 (검색 결과 테이블)
-      if (type === 'search') {
-        document.querySelectorAll('#search-tbody .file-link[data-filepath]').forEach(el => {
+      // 파일명 클릭 이벤트 위임
+      if (type === 'search' || type === 'scan') {
+        document.querySelectorAll(`#${type}-tbody .file-link[data-filepath]`).forEach(el => {
           el.addEventListener('click', () => openFile(decodeURIComponent(el.dataset.filepath)));
         });
       }
@@ -1858,7 +1869,7 @@
         tbody.innerHTML = rows.map((r, i) => `
       <tr>
         <td class="num-cell">${i + 1}</td>
-        <td>${esc(r['파일명'] || '')}</td>
+        <td><span class="file-link" data-filepath="${encodeURIComponent(r['절대 경로'] || '')}" title="클릭하여 파일 열기">${esc(r['파일명'] || '')}</span></td>
         <td>${esc(r['제목'] || '')}</td>
         <td class="num-cell">${r['슬라이드 수'] ?? '-'}</td>
         <td class="badge-cell">
