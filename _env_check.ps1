@@ -5,8 +5,9 @@ $ok  = "[O]"
 $ng  = "[X]"
 
 Write-Host ""
-Write-Host " === PPTX 플랫폼 환경 체크 ===" -ForegroundColor Cyan
+Write-Host " === PPTX 플랫폼 환경 체크 ===" -ForegroundColor Gray
 Write-Host ""
+Write-Host " -- 기본 분석 환경 --" -ForegroundColor Gray
 
 # ── Node.js ────────────────────────────────────────────────────────────────
 if (Get-Command node -ErrorAction SilentlyContinue) {
@@ -72,7 +73,7 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 Write-Host ""
-Write-Host " -- AI 분석 환경 --" -ForegroundColor Cyan
+Write-Host " -- AI 분석 환경 --" -ForegroundColor Gray
 
 # ── Ollama CLI ─────────────────────────────────────────────────────────────
 if (Get-Command ollama -ErrorAction SilentlyContinue) {
@@ -107,7 +108,7 @@ if ($LASTEXITCODE -eq 0) {
 
 # ── 기본 경로 탐색 및 자동 설정 ───────────────────────────────────────────
 Write-Host ""
-Write-Host " [기본 경로] 사용자 이름: $env:USERNAME" -ForegroundColor Cyan
+Write-Host " [기본 경로] 사용자 이름: $env:USERNAME" -ForegroundColor Gray
 
 $docs = [Environment]::GetFolderPath('MyDocuments')
 $browsePath = $docs   # MyDocuments가 OneDrive\문서 또는 문서를 자동 반환
