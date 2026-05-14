@@ -1204,6 +1204,142 @@
       height: 100%;
       display: block;
     }
+
+    /* ── AI 분석 탭 ──────────────────────────────────────────────────────────── */
+    textarea.ai-textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px 14px;
+      resize: vertical;
+      transition: border-color var(--trans), box-shadow var(--trans);
+      min-height: 90px;
+    }
+    textarea.ai-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea.ai-textarea::placeholder { color: var(--text-3); }
+
+    select.ai-select {
+      appearance: none;
+      background: var(--bg-input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b90a8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") no-repeat right 14px center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 13px;
+      padding: 9px 36px 9px 14px;
+      width: 100%;
+      cursor: pointer;
+      transition: border-color var(--trans);
+    }
+    select.ai-select:focus { outline: none; border-color: var(--accent); }
+    select.ai-select option { background: var(--bg-card); }
+
+    .ai-result-wrap {
+      margin-top: 20px;
+    }
+    .ai-result-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .ai-result-meta .meta-tag {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 2px 10px;
+      color: var(--text-2);
+    }
+    .ai-result-body {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: var(--text-1);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ai-result-body strong { color: var(--accent); }
+    .ai-model-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ai-model-row input {
+      flex: 1;
+    }
+    .ai-model-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    /* ── AI 파일별 결과 블록 ────────────────────────────────────────────────── */
+    .ai-file-block {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .ai-file-block:first-child {
+      border-top: none;
+    }
+    .ai-file-block-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-file-block-name::before {
+      content: '📄';
+      font-size: 13px;
+    }
+    .ai-file-block-result {
+      font-size: 13px;
+      line-height: 1.85;
+      color: var(--text-1);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ai-overall-card {
+      margin-top: 16px;
+    }
+    .ai-overall-card .card-title {
+      color: var(--amber);
+    }
+
+    /* AI 패널 콘솔 높이 절반 */
+    #panel-ai .console-body {
+      height: 130px;
+    }
+
+    /* 파일별 결과 테이블 */
+    .ai-per-file-result {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.75;
+      color: var(--text-1);
+    }
   </style>
 </head>
 
@@ -1227,7 +1363,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="scan">
         <span class="tab-icon">📋</span>
-        파일 목록 & 슬라이드 수
+        슬라이드 수 확인
         <span class="tab-badge">SCANNER</span>
       </button>
       <button class="tab-btn" data-tab="search">
@@ -1239,6 +1375,11 @@
         <span class="tab-icon">📊</span>
         텍스트 분석
         <span class="tab-badge">ANALYZE</span>
+      </button>
+      <button class="tab-btn" data-tab="ai">
+        <span class="tab-icon">🤖</span>
+        AI 분석
+        <span class="tab-badge">AI</span>
       </button>
     </div>
 
@@ -1598,6 +1739,100 @@
 
     </div><!-- /panel-analyze -->
 
+    <!-- ════════════════════════════════════════════════════════════════════════
+       패널 4 — AI 분석
+  ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-ai">
+
+      <div class="card">
+        <div class="card-title">AI 분석 설정</div>
+
+        <!-- 탐색 경로 -->
+        <div class="form-group">
+          <label>분석 경로 <span>— 하위 폴더 포함, 전체 또는 파일 선택 가능</span></label>
+          <div class="input-row">
+            <input type="text" id="ai-dir" placeholder="예) C:\Users\nalang\OneDrive\문서\강의자료">
+            <button class="btn btn-ghost" onclick="checkDir('ai-dir','ai-dir-hint')">확인</button>
+            <button class="btn btn-ghost" onclick="openModal('ai-dir')">📁 탐색</button>
+          </div>
+          <div class="dir-hint" id="ai-dir-hint"></div>
+        </div>
+
+        <!-- 파일 목록 -->
+        <div class="file-list-section" id="ai-file-section">
+          <div class="file-list-header">
+            <label>
+              <input type="checkbox" id="ai-check-all" onchange="toggleAiFiles(this.checked)">
+              전체 선택
+            </label>
+            <span class="file-list-count" id="ai-file-count">0개 파일</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-left:8px;" id="ai-sel-count"></span>
+          </div>
+          <div class="file-list-body" id="ai-file-list"></div>
+        </div>
+
+        <!-- 분석 유형 -->
+        <div class="form-group" style="margin-top:16px">
+          <label>분석 유형 <span>— 선택하면 프롬프트가 자동 입력됩니다</span></label>
+          <select class="ai-select" id="ai-type" onchange="updateAiPrompt()">
+            <option value="summary">📋 문서 요약 — 핵심 내용을 간결하게 정리</option>
+            <option value="topics">🎯 핵심 주제 추출 — 주요 주제와 키워드 도출</option>
+            <option value="qa">❓ 질문 & 답변 생성 — 내용 기반 Q&amp;A 작성</option>
+            <option value="compare">⚖️ 비교 분석 — 여러 문서 간 공통점·차이점</option>
+            <option value="keywords">🔑 키워드 분석 — 핵심어 추출 및 맥락 설명</option>
+            <option value="custom">✏️ 직접 입력 — 자유로운 자연어 질의</option>
+          </select>
+        </div>
+
+        <!-- 프롬프트 입력 -->
+        <div class="form-group">
+          <label>분석 요청 <span>— 자연어로 원하는 분석을 입력하거나 위에서 유형을 선택하세요</span></label>
+          <textarea class="ai-textarea" id="ai-prompt" rows="4"
+            placeholder="예) 이 문서들의 핵심 내용을 3가지로 요약해줘"></textarea>
+        </div>
+
+        <!-- 모델 선택 -->
+        <div class="form-group">
+          <label>Ollama 모델</label>
+          <div class="ai-model-row">
+            <input type="text" id="ai-model" value="phi4-mini" placeholder="phi4-mini">
+            <span class="ai-model-badge">LOCAL LLM</span>
+          </div>
+        </div>
+
+        <div class="progress-bar-wrap" id="ai-progress">
+          <div class="progress-bar" id="ai-bar"></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="ai-btn" onclick="runAiAnalysis('dir')">
+            🤖 폴더 전체 분석
+          </button>
+          <button class="btn btn-amber" id="ai-sel-btn" onclick="runAiAnalysis('files')" disabled>
+            🤖 선택 파일 분석
+          </button>
+          <button class="btn btn-ghost" onclick="clearAiAnalysis()">초기화</button>
+          <span class="hint" id="ai-hint"></span>
+        </div>
+      </div>
+
+      <!-- 콘솔 -->
+      <div class="console-wrap">
+        <div class="console-header">
+          <div class="console-dots"><span></span><span></span><span></span></div>
+          <span class="console-label">ai-analyzer — 실행 로그</span>
+          <span class="console-status" id="ai-console-status">대기 중</span>
+        </div>
+        <div class="console-body" id="ai-console">
+          <span class="log-dim">— AI 분석을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>
+        </div>
+      </div>
+
+      <!-- AI 분석 결과 (JS가 동적으로 채움) -->
+      <div class="ai-result-wrap" id="ai-results" style="display:none"></div>
+
+    </div><!-- /panel-ai -->
+
   </div><!-- /wrap -->
 
   <script>
@@ -1647,6 +1882,7 @@
           hint.className = 'dir-hint ok';
           input.classList.add('valid'); input.classList.remove('invalid');
           if (inputId === 'analyze-dir') loadPptxList();
+          if (inputId === 'ai-dir') loadAiPptxList();
         } else {
           hint.textContent = '✗ 디렉토리를 찾을 수 없습니다.';
           hint.className = 'dir-hint err';
@@ -1765,6 +2001,8 @@
                     .then(data => {
                       if (type === 'analyze') {
                         if (data && !data.error) renderAnalysisResults(data);
+                      } else if (type === 'ai') {
+                        if (data && !data.error) renderAiResults(data);
                       } else if (Array.isArray(data) && data.length > 0) {
                         renderTable(type, data);
                       }
@@ -2530,6 +2768,188 @@
       } catch (e) {
         listEl.innerHTML = `<div class="modal-empty">오류: ${esc(e.message)}</div>`;
       }
+    }
+
+
+    // ── AI 분석 탭 ────────────────────────────────────────────────────────────────
+
+    const AI_PROMPTS = {
+      summary:  '다음 문서의 내용을 분석하고 핵심 내용을 간결하게 요약해주세요. 중요한 포인트를 명확하게 정리해주세요:',
+      topics:   '다음 문서에서 핵심 주제와 키워드를 추출해주세요. 각 주제의 중요도와 상호 관계를 설명해주세요:',
+      qa:       '각 파일별로 Q:/A: 형식의 핵심 질문 2개를 생성하고, 전체 종합 Q&A를 작성합니다.',
+      compare:  '다음 문서들의 내용을 비교 분석해주세요. 각 문서의 특징, 공통점, 차이점을 체계적으로 정리해주세요:',
+      keywords: '다음 문서에서 핵심 키워드를 추출하고 각 키워드의 중요성과 문서 내 맥락을 설명해주세요:',
+      custom:   '',
+    };
+
+    let _aiFiles = [];
+
+    function updateAiPrompt() {
+      const type = document.getElementById('ai-type').value;
+      const ta   = document.getElementById('ai-prompt');
+      if (type !== 'custom') ta.value = AI_PROMPTS[type];
+      ta.readOnly = (type !== 'custom');
+      ta.style.opacity = (type !== 'custom') ? '0.75' : '1';
+    }
+    // 초기 프롬프트 세팅
+    updateAiPrompt();
+
+    async function loadAiPptxList() {
+      const dir = document.getElementById('ai-dir').value.trim();
+      if (!dir) return;
+      try {
+        const r = await fetch(`/api/list-pptx?path=${encodeURIComponent(dir)}`);
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        _aiFiles = d.files || [];
+        renderAiFileList(_aiFiles);
+        document.getElementById('ai-file-section').classList.add('show');
+      } catch (e) {
+        document.getElementById('ai-dir-hint').textContent = '파일 목록 로드 실패: ' + e.message;
+      }
+    }
+
+    function renderAiFileList(files) {
+      const list  = document.getElementById('ai-file-list');
+      const count = document.getElementById('ai-file-count');
+      count.textContent = `${files.length}개 파일`;
+      list.innerHTML = files.map(f => `
+        <label class="file-item">
+          <input type="checkbox" class="file-cb ai-cb" data-path="${encodeURIComponent(f.path)}"
+            onchange="updateAiSelBtn()">
+          <span class="file-name">${esc(f.rel || f.name)}</span>
+        </label>`).join('');
+      updateAiSelBtn();
+    }
+
+    function toggleAiFiles(checked) {
+      document.querySelectorAll('.ai-cb').forEach(cb => cb.checked = checked);
+      updateAiSelBtn();
+    }
+
+    function updateAiSelBtn() {
+      const sel = document.querySelectorAll('.ai-cb:checked').length;
+      const total = _aiFiles.length;
+      document.getElementById('ai-sel-count').textContent = sel ? `${sel}개 선택됨` : '';
+      document.getElementById('ai-sel-btn').disabled = sel === 0;
+      const allCb = document.getElementById('ai-check-all');
+      if (allCb) allCb.indeterminate = sel > 0 && sel < total;
+      if (allCb) allCb.checked = sel === total && total > 0;
+    }
+
+    function runAiAnalysis(mode) {
+      const dir    = document.getElementById('ai-dir').value.trim();
+      const prompt = document.getElementById('ai-prompt').value.trim();
+      const model  = document.getElementById('ai-model').value.trim() || 'phi4-mini';
+      const type   = document.getElementById('ai-type').value;
+      const hint   = document.getElementById('ai-hint');
+      hint.textContent = '';
+
+      if (type === 'custom' && !prompt) { hint.textContent = '⚠ 분석 요청 내용을 입력하세요.'; return; }
+
+      document.getElementById('ai-results').style.display = 'none';
+      document.getElementById('ai-results').innerHTML = '';
+
+      if (mode === 'files') {
+        const selected = [...document.querySelectorAll('.ai-cb:checked')]
+          .map(cb => decodeURIComponent(cb.dataset.path));
+        if (!selected.length) { hint.textContent = '⚠ 파일을 선택하세요.'; return; }
+        streamAPI('/api/ai-analyze', { files: selected, prompt, model, type }, 'ai', null, '/api/ai-results');
+      } else {
+        if (!dir) { hint.textContent = '⚠ 디렉토리 경로를 입력하세요.'; return; }
+        streamAPI('/api/ai-analyze', { dir, prompt, model, type }, 'ai', null, '/api/ai-results');
+      }
+    }
+
+    function clearAiAnalysis() {
+      document.getElementById('ai-console').innerHTML =
+        '<span class="log-dim">— AI 분석을 시작하면 이 곳에 진행 상황이 표시됩니다 —</span>';
+      document.getElementById('ai-console-status').textContent = '대기 중';
+      document.getElementById('ai-dir-hint').textContent = '';
+      document.getElementById('ai-hint').textContent = '';
+      document.getElementById('ai-results').style.display = 'none';
+      document.getElementById('ai-file-section').classList.remove('show');
+      document.getElementById('ai-file-list').innerHTML = '';
+      document.getElementById('ai-sel-btn').disabled = true;
+      document.getElementById('ai-sel-count').textContent = '';
+      const allCb = document.getElementById('ai-check-all');
+      if (allCb) allCb.checked = false;
+      _aiFiles = [];
+      setRunning('ai', false);
+    }
+
+    // 전체 출력용 (빈 줄 유지)
+    function fmtAi(text) {
+      return esc(text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+    // 파일별 결과용 (빈 줄 제거)
+    function fmtAiCompact(text) {
+      const stripped = (text || '').split('\n').filter(l => l.trim()).join('\n');
+      return esc(stripped).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+
+    function renderAiResults(data) {
+      const wrap     = document.getElementById('ai-results');
+      const perFile  = data.per_file || [];
+      const hasMany  = perFile.length > 1;
+
+      const metaHtml = `<div class="ai-result-meta">
+        <span class="meta-tag">🤖 ${esc(data.model || 'phi4-mini')}</span>
+        ${(data.files || []).map(f => `<span class="meta-tag">📄 ${esc(f)}</span>`).join(' ')}
+      </div>`;
+
+      let html = '';
+
+      if (hasMany) {
+        // ── 파일별 결과 테이블 ────────────────────────────────────────────
+        html += `<div class="card" style="padding:0;overflow:hidden">
+          <div class="table-toolbar" style="padding:14px 20px 10px">
+            <span class="table-title">📄 파일별 분석 결과</span>
+            <span class="table-count">${perFile.length}개 파일</span>
+            ${metaHtml}
+          </div>
+          <div class="table-wrap" style="max-height:500px">
+            <table style="table-layout:fixed">
+              <thead>
+                <tr>
+                  <th style="width:28%">파일명</th>
+                  <th>분석 결과 (요약)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${perFile.map(f => `<tr>
+                  <td style="font-family:var(--font-mono);font-size:11px;color:var(--accent);vertical-align:top;padding-top:12px;cursor:pointer"
+                      onclick="openFile(decodeURIComponent('${encodeURIComponent(f.path || '')}'))"
+                      title="클릭하여 파일 열기">
+                    ${esc(f.filename)}<br><span style="color:var(--text-3);font-size:10px">↗ 열기</span>
+                  </td>
+                  <td><div class="ai-per-file-result">${fmtAiCompact(f.result)}</div></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+
+        // ── 종합 분석 카드 ────────────────────────────────────────────────
+        if (data.overall) {
+          html += `<div class="card ai-overall-card">
+            <div class="card-title">🔗 전체 종합 분석</div>
+            <div class="ai-result-body">${fmtAi(data.overall)}</div>
+          </div>`;
+        }
+      } else {
+        // ── 단일 파일 결과 ────────────────────────────────────────────────
+        const result = perFile.length === 1 ? perFile[0].result : (data.result || '');
+        html += `<div class="card">
+          <div class="card-title">🤖 AI 분석 결과</div>
+          ${metaHtml}
+          <div class="ai-result-body">${fmtAi(result)}</div>
+        </div>`;
+      }
+
+      wrap.innerHTML = html;
+      wrap.style.display = 'block';
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
   </script>

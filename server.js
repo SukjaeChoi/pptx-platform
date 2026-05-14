@@ -308,6 +308,70 @@ app.get('/api/analyze-results', (req, res) => {
   }
 });
 
+// ── API: AI 분석 실행 ─────────────────────────────────────────────────────────
+app.post('/api/ai-analyze', (req, res) => {
+  const { dir, files, prompt, model } = req.body;
+
+  const scriptPath = path.join(SCRIPTS_DIR, 'ai_analyzer.py');
+  if (!fs.existsSync(scriptPath)) {
+    return res.status(404).json({ error: `스크립트를 찾을 수 없습니다: ${scriptPath}` });
+  }
+
+  const safePrompt = (prompt || '').trim();
+  const safeModel  = (model  || 'phi4-mini').trim();
+  const safeType   = (req.body.type || 'summary').replace(/[^a-z]/g, '');
+
+  let args;
+  if (files && files.length > 0) {
+    args = [scriptPath, '--files', ...files, '--prompt', safePrompt, '--model', safeModel, '--type', safeType];
+  } else if (dir) {
+    args = [scriptPath, '--dir', dir, '--prompt', safePrompt, '--model', safeModel, '--type', safeType];
+  } else {
+    return res.status(400).json({ error: '경로 또는 파일 목록이 필요합니다.' });
+  }
+
+  // ollama가 있는 python 우선 탐색 (없으면 기본 PYTHON 사용)
+  const { execSync } = require('child_process');
+  let aiPython = PYTHON;
+  for (const cmd of ['python', 'python3']) {
+    try {
+      const ok = execSync(`${cmd} -c "import ollama; print('ok')"`,
+        { encoding: 'utf-8', timeout: 5000 }).trim();
+      if (ok === 'ok') { aiPython = cmd; break; }
+    } catch (_) {}
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const proc = require('child_process').spawn(
+    aiPython, args,
+    { cwd: SCRIPTS_DIR, env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' } }
+  );
+
+  const send = (type, data) => res.write(`data: ${JSON.stringify({ type, data })}\n\n`);
+
+  proc.stdout.on('data', chunk => send('log', chunk.toString()));
+  proc.stderr.on('data', chunk => send('log', chunk.toString()));
+  proc.on('close', code => { send('done', { code, savedFile: null }); res.end(); });
+  proc.on('error', err  => { send('error', err.message); res.end(); });
+});
+
+// ── API: AI 분석 결과 조회 ────────────────────────────────────────────────────
+app.get('/api/ai-results', (req, res) => {
+  const tmpPath = path.join(SCRIPTS_DIR, '_ai_tmp.json');
+  if (!fs.existsSync(tmpPath))
+    return res.status(404).json({ error: 'AI 분석 결과 없음. 먼저 분석을 실행하세요.' });
+  try {
+    const raw  = fs.readFileSync(tmpPath, 'utf-8');
+    const data = JSON.parse(raw);
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── 기본 라우트 ───────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
