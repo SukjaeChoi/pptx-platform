@@ -1275,6 +1275,37 @@
       word-break: break-word;
     }
     .ai-result-body strong { color: var(--accent); }
+<<<<<<< HEAD
+    .ai-model-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .ai-model-inline select {
+      width: 170px;
+    }
+    .ai-model-refresh {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-2);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 6px 10px;
+      transition: color var(--trans), border-color var(--trans);
+      flex-shrink: 0;
+    }
+    .ai-model-refresh:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .ai-model-refresh.spinning {
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+=======
     .ai-model-row {
       display: flex;
       align-items: center;
@@ -1283,6 +1314,7 @@
     .ai-model-row input {
       flex: 1;
     }
+>>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
     .ai-model-badge {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -1791,6 +1823,8 @@
             placeholder="예) 이 문서들의 핵심 내용을 3가지로 요약해줘"></textarea>
         </div>
 
+<<<<<<< HEAD
+=======
         <!-- 모델 선택 -->
         <div class="form-group">
           <label>Ollama 모델</label>
@@ -1800,6 +1834,7 @@
           </div>
         </div>
 
+>>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
         <div class="progress-bar-wrap" id="ai-progress">
           <div class="progress-bar" id="ai-bar"></div>
         </div>
@@ -1813,6 +1848,16 @@
           </button>
           <button class="btn btn-ghost" onclick="clearAiAnalysis()">초기화</button>
           <span class="hint" id="ai-hint"></span>
+<<<<<<< HEAD
+          <div class="ai-model-inline">
+            <select id="ai-model" class="ai-select">
+              <option value="phi4-mini">phi4-mini</option>
+            </select>
+            <button class="ai-model-refresh" onclick="loadAiModels()" title="모델 목록 새로고침">↻</button>
+            <span class="ai-model-badge">LOCAL LLM</span>
+          </div>
+=======
+>>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
         </div>
       </div>
 
@@ -1843,9 +1888,38 @@
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+<<<<<<< HEAD
+        if (btn.dataset.tab === 'ai') loadAiModels();
       });
     });
 
+    // ── Ollama 모델 목록 로드 ─────────────────────────────────────────────────────
+    async function loadAiModels() {
+      const sel = document.getElementById('ai-model');
+      const btn = document.querySelector('.ai-model-refresh');
+      if (btn) btn.classList.add('spinning');
+      try {
+        const r = await fetch('/api/ai-models');
+        const { models } = await r.json();
+        if (!models || models.length === 0) return;
+        const prev = sel.value;
+        sel.innerHTML = models.map(m =>
+          `<option value="${m}"${m === prev ? ' selected' : ''}>${m}</option>`
+        ).join('');
+        // 이전 선택값이 목록에 없으면 첫 번째 항목 선택
+        if (!models.includes(prev)) sel.value = models[0];
+      } catch (_) {
+        // Ollama 미실행 시 기존 옵션 유지
+      } finally {
+        if (btn) btn.classList.remove('spinning');
+      }
+    }
+
+=======
+      });
+    });
+
+>>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
     // ── 서버 상태 확인 ────────────────────────────────────────────────────────────
     async function checkHealth() {
       const dot = document.getElementById('statusDot');
@@ -2906,7 +2980,10 @@
           <div class="table-toolbar" style="padding:14px 20px 10px">
             <span class="table-title">📄 파일별 분석 결과</span>
             <span class="table-count">${perFile.length}개 파일</span>
+<<<<<<< HEAD
+=======
             ${metaHtml}
+>>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
           </div>
           <div class="table-wrap" style="max-height:500px">
             <table style="table-layout:fixed">

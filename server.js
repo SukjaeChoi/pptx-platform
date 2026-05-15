@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const fs      = require('fs');
 
 const app  = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3100;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -305,6 +305,21 @@ app.get('/api/analyze-results', (req, res) => {
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ── API: 설치된 Ollama 모델 목록 ─────────────────────────────────────────────
+app.get('/api/ai-models', (req, res) => {
+  const { execSync } = require('child_process');
+  try {
+    const output = execSync('ollama list', { encoding: 'utf-8', timeout: 8000 });
+    const models = output.trim().split('\n')
+      .slice(1)                          // 헤더 행 제거
+      .map(line => line.trim().split(/\s+/)[0])
+      .filter(name => name && name.length > 0);
+    res.json({ models });
+  } catch (e) {
+    res.status(500).json({ error: 'Ollama를 찾을 수 없습니다.', models: [] });
   }
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "pptx-platform",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "PPTX 파일 관리 플랫폼",
   "main": "server.js",
   "scripts": {
