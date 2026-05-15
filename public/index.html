@@ -2921,7 +2921,7 @@
                   <td style="font-family:var(--font-mono);font-size:11px;color:var(--accent);vertical-align:top;padding-top:12px;cursor:pointer"
                       onclick="openFile(decodeURIComponent('${encodeURIComponent(f.path || '')}'))"
                       title="클릭하여 파일 열기">
-                    ${esc(f.filename)}<br><span style="color:var(--text-3);font-size:10px">↗ 열기</span>
+                    ${esc(f.filename)}
                   </td>
                   <td><div class="ai-per-file-result">${fmtAiCompact(f.result)}</div></td>
                 </tr>`).join('')}
@@ -2940,9 +2940,18 @@
       } else {
         // ── 단일 파일 결과 ────────────────────────────────────────────────
         const result = perFile.length === 1 ? perFile[0].result : (data.result || '');
+        const fileLink = perFile.length === 1
+          ? `<div style="margin-bottom:12px;font-family:var(--font-mono);font-size:12px;
+                         color:var(--accent);cursor:pointer;display:inline-block"
+                 onclick="openFile(decodeURIComponent('${encodeURIComponent(perFile[0].path || '')}'))"
+                 title="클릭하여 파일 열기">
+               📄 ${esc(perFile[0].filename)}
+             </div>`
+          : '';
         html += `<div class="card">
           <div class="card-title">🤖 AI 분석 결과</div>
           ${metaHtml}
+          ${fileLink}
           <div class="ai-result-body">${fmtAi(result)}</div>
         </div>`;
       }
