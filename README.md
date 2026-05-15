@@ -71,11 +71,6 @@ Ollama 설치 후 터미널(CMD 또는 PowerShell)에서 원하는 모델을 설
 
 > 모델을 여러 개 설치하면 AI 분석 탭 화면에서 드롭다운으로 즉시 전환할 수 있습니다.
 
-### 7. Open WebUI (선택 사항)
-
-Ollama 모델을 채팅 UI로 사용하고 싶다면 [Open WebUI](https://github.com/open-webui/open-webui)를 설치할 수 있습니다.  
-Open WebUI는 기본적으로 `http://localhost:3000` 을 사용합니다.  
-**PPTX 플랫폼은 포트 충돌을 피하기 위해 `http://localhost:3100` 을 사용합니다.**
 
 ---
 
@@ -94,7 +89,6 @@ node server.js
 | 서비스 | 주소 |
 |--------|------|
 | PPTX 플랫폼 | http://localhost:3100 |
-| Open WebUI (설치 시) | http://localhost:3000 |
 
 ---
 
