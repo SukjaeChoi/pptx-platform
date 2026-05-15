@@ -3,14 +3,17 @@
 
 $ok  = "[O]"
 $ng  = "[X]"
-$missingPips = @()   # 누락된 pip 패키지 수집
+$missingPips = @()
+
+# -Command 방식 실행 시 $scriptDir 가 비어있으므로 환경변수로 보완
+$scriptDir = if ($PSScriptRoot -ne '') { $PSScriptRoot } else { (Get-Location).Path }
 
 Write-Host ""
 Write-Host " === PPTX 플랫폼 환경 체크 ===" -ForegroundColor Gray
 Write-Host ""
 Write-Host " -- 기본 분석 환경 --" -ForegroundColor Gray
 
-# ── Node.js ────────────────────────────────────────────────────────────────
+# Node.js
 if (Get-Command node -ErrorAction SilentlyContinue) {
     $v = (node -v 2>&1)
     Write-Host "$ok Node.js $v" -ForegroundColor Green
@@ -19,7 +22,7 @@ if (Get-Command node -ErrorAction SilentlyContinue) {
     Write-Host "     https://nodejs.org 에서 LTS 버전 설치 후 재시도하세요" -ForegroundColor Yellow
 }
 
-# ── Python ─────────────────────────────────────────────────────────────────
+# Python
 if (Get-Command python -ErrorAction SilentlyContinue) {
     $v = (python --version 2>&1)
     Write-Host "$ok $v" -ForegroundColor Green
@@ -29,8 +32,8 @@ if (Get-Command python -ErrorAction SilentlyContinue) {
     Write-Host '     설치 시 "Add Python to PATH" 반드시 체크' -ForegroundColor Yellow
 }
 
-# ── npm 패키지 ─────────────────────────────────────────────────────────────
-$nodeModules = Join-Path $PSScriptRoot "node_modules"
+# npm 패키지
+$nodeModules = Join-Path $scriptDir "node_modules"
 if (Test-Path $nodeModules) {
     Write-Host "$ok npm 패키지 확인" -ForegroundColor Green
 } else {
@@ -39,7 +42,7 @@ if (Test-Path $nodeModules) {
     Write-Host "     npm install" -ForegroundColor Yellow
 }
 
-# ── python-pptx / openpyxl ────────────────────────────────────────────────
+# python-pptx / openpyxl
 python -c "import pptx, openpyxl" 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "$ok python-pptx / openpyxl 확인" -ForegroundColor Green
@@ -48,16 +51,16 @@ if ($LASTEXITCODE -eq 0) {
     $missingPips += "python-pptx", "openpyxl"
 }
 
-# ── Java ───────────────────────────────────────────────────────────────────
+# Java
 if (Get-Command java -ErrorAction SilentlyContinue) {
     $v = (java -version 2>&1 | Select-Object -First 1)
     Write-Host "$ok Java: $v" -ForegroundColor Green
 } else {
-    Write-Host "$ng Java 없음 — rhinoMorph(텍스트 분석 탭) 사용에 필요" -ForegroundColor Red
+    Write-Host "$ng Java 없음 (rhinoMorph 텍스트 분석 탭에 필요)" -ForegroundColor Red
     Write-Host "     https://www.java.com/ko/download 에서 설치 후 재시도하세요" -ForegroundColor Yellow
 }
 
-# ── JPype1 ─────────────────────────────────────────────────────────────────
+# JPype1
 python -c "import jpype" 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "$ok JPype1 확인" -ForegroundColor Green
@@ -66,7 +69,7 @@ if ($LASTEXITCODE -eq 0) {
     $missingPips += "JPype1"
 }
 
-# ── rhinoMorph ─────────────────────────────────────────────────────────────
+# rhinoMorph
 python -c "import rhinoMorph" 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "$ok rhinoMorph 확인" -ForegroundColor Green
@@ -78,7 +81,7 @@ if ($LASTEXITCODE -eq 0) {
 Write-Host ""
 Write-Host " -- AI 분석 환경 --" -ForegroundColor Gray
 
-# ── Ollama CLI ─────────────────────────────────────────────────────────────
+# Ollama CLI
 $ollamaOk = $false
 if (Get-Command ollama -ErrorAction SilentlyContinue) {
     $v = (ollama --version 2>&1 | Select-Object -First 1)
@@ -90,40 +93,36 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
     Write-Host "     2. 설치 완료 후 이 체크를 다시 실행하세요" -ForegroundColor Yellow
 }
 
-# ── 설치된 Ollama 모델 확인 ────────────────────────────────────────────────
+# 설치된 Ollama 모델 확인
 if ($ollamaOk) {
-    $list = ollama list 2>$null
+    $list = (ollama list 2>$null | Out-String)
     $found = @()
     if ($list -match "phi4-mini") { $found += "phi4-mini" }
     if ($list -match "gemma4")    { $found += "gemma4" }
 
-    # 위 두 모델 외 다른 모델도 표시
     $allLines = ($list -split "`n") | Select-Object -Skip 1 |
         Where-Object { $_.Trim() -ne "" } |
-        ForEach-Object { ($_ -split "\s+")[0] }
-    $others = $allLines | Where-Object { $_ -ne "phi4-mini" -and $_ -notmatch "^gemma4" }
+        ForEach-Object { ($_.Trim() -split "\s+")[0] }
+    $others = $allLines | Where-Object { $_ -and $_ -ne "phi4-mini" -and $_ -notmatch "^gemma4" }
     if ($others) { $found += $others }
 
     if ($found.Count -gt 0) {
         Write-Host "$ok 설치된 모델: $($found -join ', ')" -ForegroundColor Green
     } else {
-        Write-Host "$ng 권장 모델 미설치" -ForegroundColor Red
-        Write-Host "     다음 중 하나 이상을 설치하세요:" -ForegroundColor Yellow
+        Write-Host "$ng 권장 모델 미설치 - 다음 중 하나 이상을 설치하세요:" -ForegroundColor Red
         Write-Host "     phi4-mini (약 2.5GB) : ollama run phi4-mini" -ForegroundColor Yellow
         Write-Host "     gemma4    (약 8.1GB) : ollama run gemma4" -ForegroundColor Yellow
     }
 
-    # phi4-mini 개별 안내
     if ($list -notmatch "phi4-mini") {
-        Write-Host "   · phi4-mini 미설치 — 설치 명령: ollama run phi4-mini" -ForegroundColor DarkYellow
+        Write-Host "   . phi4-mini 미설치 - 설치 명령: ollama run phi4-mini" -ForegroundColor DarkYellow
     }
-    # gemma4 개별 안내
     if ($list -notmatch "gemma4") {
-        Write-Host "   · gemma4    미설치 — 설치 명령: ollama run gemma4" -ForegroundColor DarkYellow
+        Write-Host "   . gemma4    미설치 - 설치 명령: ollama run gemma4" -ForegroundColor DarkYellow
     }
 }
 
-# ── ollama Python 패키지 ───────────────────────────────────────────────────
+# ollama Python 패키지
 python -c "import ollama" 2>$null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "$ok ollama Python 패키지 확인" -ForegroundColor Green
@@ -132,7 +131,7 @@ if ($LASTEXITCODE -eq 0) {
     $missingPips += "ollama"
 }
 
-# ── 누락된 pip 패키지 자동 설치 제안 ──────────────────────────────────────
+# 누락된 pip 패키지 자동 설치 제안
 if ($missingPips.Count -gt 0) {
     Write-Host ""
     Write-Host " 누락된 Python 패키지: $($missingPips -join ', ')" -ForegroundColor Yellow
@@ -150,18 +149,22 @@ if ($missingPips.Count -gt 0) {
     }
 }
 
-# ── 기본 경로 탐색 및 자동 설정 ───────────────────────────────────────────
+# 기본 경로 탐색 및 자동 설정
 Write-Host ""
 Write-Host " [기본 경로] 사용자 이름: $env:USERNAME" -ForegroundColor Gray
 
 $docs = [Environment]::GetFolderPath('MyDocuments')
 $browsePath = $docs
+$escaped = $browsePath -replace '\\', '\\\\'
 
-$indexFile = Join-Path $PSScriptRoot "public\index.html"
+$indexFile = Join-Path $scriptDir "public\index.html"
 if (Test-Path $indexFile) {
-    $escaped = $browsePath -replace '\\', '\\\\'
     $content = [IO.File]::ReadAllText($indexFile, [Text.Encoding]::UTF8)
-    $content = $content -replace "const BROWSE_DEFAULT = '[^']*';", "const BROWSE_DEFAULT = '$escaped';"
+    $m = [regex]::Match($content, "const BROWSE_DEFAULT = '[^']*';")
+    if ($m.Success) {
+        $newVal  = "const BROWSE_DEFAULT = '" + $escaped + "';"
+        $content = $content.Replace($m.Value, $newVal)
+    }
     [IO.File]::WriteAllText($indexFile, $content, [System.Text.UTF8Encoding]::new($false))
     Write-Host "$ok 기본 경로 설정 완료: $browsePath" -ForegroundColor Green
 } else {

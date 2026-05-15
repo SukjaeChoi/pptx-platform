@@ -1,11 +1,5 @@
-<<<<<<< HEAD
 @echo off
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0_env_check.ps1"
+set PPTX_SCRIPT_DIR=%~dp0
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create([System.IO.File]::ReadAllText('%~dp0_env_check.ps1', [System.Text.Encoding]::UTF8)))"
 pause
-=======
-@echo off
-cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0_env_check.ps1"
-pause
->>>>>>> d737c773ad1eb8fdd9ba8a7c3596f2a68f1874d1
