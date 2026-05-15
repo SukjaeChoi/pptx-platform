@@ -96,15 +96,12 @@ if (Get-Command ollama -ErrorAction SilentlyContinue) {
 # 설치된 Ollama 모델 확인
 if ($ollamaOk) {
     $list = (ollama list 2>$null | Out-String)
-    $found = @()
-    if ($list -match "phi4-mini") { $found += "phi4-mini" }
-    if ($list -match "gemma4")    { $found += "gemma4" }
 
+    # :latest 태그 제거 후 중복 제거
     $allLines = ($list -split "`n") | Select-Object -Skip 1 |
         Where-Object { $_.Trim() -ne "" } |
-        ForEach-Object { ($_.Trim() -split "\s+")[0] }
-    $others = $allLines | Where-Object { $_ -and $_ -ne "phi4-mini" -and $_ -notmatch "^gemma4" }
-    if ($others) { $found += $others }
+        ForEach-Object { ($_.Trim() -split "\s+")[0] -replace ':latest$', '' }
+    $found = $allLines | Where-Object { $_ } | Sort-Object -Unique
 
     if ($found.Count -gt 0) {
         Write-Host "$ok 설치된 모델: $($found -join ', ')" -ForegroundColor Green

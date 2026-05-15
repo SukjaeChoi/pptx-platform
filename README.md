@@ -67,7 +67,7 @@ Ollama 설치 후 터미널(CMD 또는 PowerShell)에서 원하는 모델을 설
 | 모델 | 크기 | 설치 명령 | 특징 |
 |------|------|-----------|------|
 | phi4-mini | 약 2.5GB | `ollama run phi4-mini` | 가볍고 빠름 |
-| gemma4 | 약 8.1GB | `ollama run gemma4` | Google 최신 모델, 높은 정확도 |
+| gemma4 | 약 9.6GB | `ollama run gemma4` | Google 최신 모델, 높은 정확도 |
 
 > 모델을 여러 개 설치하면 AI 분석 탭 화면에서 드롭다운으로 즉시 전환할 수 있습니다.
 

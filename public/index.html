@@ -1873,9 +1873,11 @@
       if (btn) btn.classList.add('spinning');
       try {
         const r = await fetch('/api/ai-models');
-        const { models } = await r.json();
-        if (!models || models.length === 0) return;
-        const prev = sel.value;
+        const raw = (await r.json()).models || [];
+        // :latest 태그 제거 후 중복 제거
+        const models = [...new Set(raw.map(m => m.replace(/:latest$/, '')))];
+        if (models.length === 0) return;
+        const prev = sel.value.replace(/:latest$/, '');
         sel.innerHTML = models.map(m =>
           `<option value="${m}"${m === prev ? ' selected' : ''}>${m}</option>`
         ).join('');
